@@ -1,0 +1,79 @@
+@theme {
+  /* Colors */
+  --color-background: #000000;
+  --color-surface: #0a0a0a;
+  --color-surface-elevated: #111111;
+  --color-border: #222222;
+  --color-border-muted: #1a1a1a;
+  --color-primary: #3b82f6; /* Vercel Blue-ish */
+  --color-primary-hover: #2563eb;
+  --color-secondary: #27272a;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #3b82f6;
+  
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #a1a1aa;
+  --color-text-muted: #71717a;
+  --color-text-disabled: #3f3f46;
+
+  /* Typography */
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  
+  /* Radius System */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  --shadow-floating: 0 20px 25px -5px rgba(0, 0, 0, 0.8), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+  --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --shadow-glow: 0 0 15px 0 rgba(59, 130, 246, 0.5);
+
+  /* Layer System (Z-Index) */
+  --z-background: -10;
+  --z-base: 0;
+  --z-sidebar: 30;
+  --z-navbar: 40;
+  --z-dropdown: 50;
+  --z-popover: 60;
+  --z-tooltip: 70;
+  --z-modal: 80;
+  --z-toast: 90;
+  --z-command-palette: 100;
+}
+
+@layer utilities {
+  .glass-light {
+    @apply bg-surface/30 backdrop-blur-md border border-white/5 shadow-glass;
+  }
+  .glass-medium {
+    @apply bg-surface/50 backdrop-blur-lg border border-white/10 shadow-glass;
+  }
+  .glass-heavy {
+    @apply bg-surface/80 backdrop-blur-xl border border-white/15 shadow-glass;
+  }
+  
+  .display-xl { @apply text-5xl font-bold tracking-tight leading-tight; }
+  .display-lg { @apply text-4xl font-bold tracking-tight leading-tight; }
+  .heading { @apply text-2xl font-semibold tracking-tight; }
+  .subheading { @apply text-xl font-medium tracking-tight; }
+  .body-large { @apply text-lg leading-relaxed; }
+  .body { @apply text-base leading-relaxed; }
+  .body-small { @apply text-sm leading-relaxed; }
+  .caption { @apply text-xs text-text-muted; }
+  .code { @apply font-mono text-sm; }
+  .label { @apply text-xs font-medium uppercase tracking-wider text-text-secondary; }
+}
+
+body {
+  @apply bg-background text-text-primary font-sans antialiased;
+}

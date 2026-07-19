@@ -3,7 +3,7 @@ import { Container } from '@codesync/ui/components/layout/container';
 export function Stats() {
   return (
     <section className="pb-24">
-      <Container>
+      <Container className="mx-auto w-full">
         <div className="rounded-xl border border-white/10 bg-[#0a0a0a] p-8 md:p-12 relative overflow-hidden">
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
           <div className="absolute right-0 top-0 w-1/2 h-full bg-gradient-to-l from-primary/10 to-transparent blur-3xl"></div>

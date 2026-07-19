@@ -1,0 +1,549 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// -----------------------------------------------------------------------------
+// CORE ENTITIES
+// -----------------------------------------------------------------------------
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  name          String?
+  avatarUrl     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  profile       Profile?
+  workspaceMembers WorkspaceMember[]
+  projectMembers ProjectMember[]
+  apiKeys       ApiKey[]
+  auditLogs     AuditLog[]
+  notifications Notification[]
+  aiSessions    AiSession[]
+  favorites     Favorite[]
+  recentProjects RecentProject[]
+  workspaceTerminalSessions WorkspaceTerminalSession[]
+}
+
+model Profile {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  bio       String?
+  website   String?
+  githubUrl String?
+  twitterUrl String?
+  theme     String   @default("system")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Workspace {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  logoUrl     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  members     WorkspaceMember[]
+  projects    Project[]
+  settings    WorkspaceSetting?
+  invitations WorkspaceInvitation[]
+  auditLogs   AuditLog[]
+}
+
+model WorkspaceMember {
+  id          String   @id @default(uuid())
+  workspaceId String
+  userId      String
+  role        String   @default("MEMBER") // OWNER, ADMIN, MEMBER
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+}
+
+model WorkspaceSetting {
+  id          String   @id @default(uuid())
+  workspaceId String   @unique
+  billingPlan String   @default("FREE")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+model WorkspaceInvitation {
+  id          String   @id @default(uuid())
+  workspaceId String
+  email       String
+  role        String   @default("MEMBER")
+  token       String   @unique
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+model Project {
+  id          String   @id @default(uuid())
+  workspaceId String
+  name        String
+  slug        String
+  description String?
+  icon        String?
+  color       String?
+  visibility  String   @default("PRIVATE") // PUBLIC, PRIVATE
+  framework   String?
+  runtime     String?
+  isAiEnabled Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  members     ProjectMember[]
+  repository  Repository?
+  settings    ProjectSetting?
+  activities  ProjectActivity[]
+  secrets     ProjectSecret[]
+  tags        ProjectTag[]
+  deployments Deployment[]
+  webhooks    Webhook[]
+  aiSessions  AiSession[]
+  favorites   Favorite[]
+  recentViews RecentProject[]
+  workspaceInstances WorkspaceInstance[]
+  provisionJobs ProvisionJob[]
+
+  @@unique([workspaceId, slug])
+}
+
+model ProjectMember {
+  id          String   @id @default(uuid())
+  projectId   String
+  userId      String
+  role        String   @default("MEMBER") // ADMIN, MEMBER, VIEWER
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permissions ProjectPermission[]
+
+  @@unique([projectId, userId])
+}
+
+model ProjectPermission {
+  id              String        @id @default(uuid())
+  projectMemberId String
+  permission      String // E.g. "deploy", "manage_secrets"
+  createdAt       DateTime      @default(now())
+
+  projectMember   ProjectMember @relation(fields: [projectMemberId], references: [id], onDelete: Cascade)
+}
+
+model ProjectSetting {
+  id          String   @id @default(uuid())
+  projectId   String   @unique
+  defaultBranch String @default("main")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model ProjectSecret {
+  id          String   @id @default(uuid())
+  projectId   String
+  name        String
+  value       String   // Encrypted
+  environment String   @default("production") // production, preview, development
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, name, environment])
+}
+
+model ProjectTag {
+  id        String   @id @default(uuid())
+  projectId String
+  name      String
+  createdAt DateTime @default(now())
+
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, name])
+}
+
+// -----------------------------------------------------------------------------
+// VERSION CONTROL
+// -----------------------------------------------------------------------------
+
+model Repository {
+  id            String   @id @default(uuid())
+  projectId     String   @unique
+  provider      String   @default("github")
+  providerRepoId String?
+  url           String?
+  defaultBranch String   @default("main")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  branches      Branch[]
+  commits       Commit[]
+}
+
+model Branch {
+  id           String   @id @default(uuid())
+  repositoryId String
+  name         String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  repository   Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  commits      Commit[]
+
+  @@unique([repositoryId, name])
+}
+
+model Commit {
+  id           String   @id @default(uuid())
+  repositoryId String
+  branchId     String
+  sha          String
+  message      String
+  authorName   String
+  authorEmail  String
+  createdAt    DateTime @default(now())
+
+  repository   Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  branch       Branch     @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  snapshots    FileSnapshot[]
+
+  @@unique([repositoryId, sha])
+}
+
+model FileSnapshot {
+  id        String   @id @default(uuid())
+  commitId  String
+  path      String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+
+  commit    Commit   @relation(fields: [commitId], references: [id], onDelete: Cascade)
+
+  @@unique([commitId, path])
+}
+
+// -----------------------------------------------------------------------------
+// IDE & COLLABORATION
+// -----------------------------------------------------------------------------
+
+model EditorSession {
+  id        String   @id @default(uuid())
+  projectId String
+  userId    String?
+  startedAt DateTime @default(now())
+  endedAt   DateTime?
+  status    String   @default("ACTIVE") // ACTIVE, CLOSED
+}
+
+model TerminalSession {
+  id        String   @id @default(uuid())
+  projectId String
+  userId    String?
+  startedAt DateTime @default(now())
+  endedAt   DateTime?
+  status    String   @default("ACTIVE")
+}
+
+model CollaborativeSession {
+  id        String   @id @default(uuid())
+  projectId String
+  startedAt DateTime @default(now())
+  endedAt   DateTime?
+  status    String   @default("ACTIVE")
+}
+
+// -----------------------------------------------------------------------------
+// DEVOPS & LOGGING
+// -----------------------------------------------------------------------------
+
+model Deployment {
+  id          String   @id @default(uuid())
+  projectId   String
+  status      String   @default("QUEUED") // QUEUED, BUILDING, SUCCESS, FAILED
+  url         String?
+  environment String   @default("production")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  logs        DeploymentLog[]
+}
+
+model DeploymentLog {
+  id           String   @id @default(uuid())
+  deploymentId String
+  message      String   @db.Text
+  level        String   @default("INFO")
+  createdAt    DateTime @default(now())
+
+  deployment   Deployment @relation(fields: [deploymentId], references: [id], onDelete: Cascade)
+}
+
+model ProjectActivity {
+  id        String   @id @default(uuid())
+  projectId String
+  userId    String?
+  type      String   // E.g. PROJECT_CREATED, DEPLOYMENT_STARTED
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model ProjectTemplate {
+  id              String   @id @default(uuid())
+  name            String
+  slug            String   @unique
+  description     String?
+  coverImage      String?
+  framework       String
+  runtime         String
+  packageManager  String
+  category        String
+  difficulty      String   @default("BEGINNER")
+  tags            String[] // Arrays are supported in PostgreSQL
+  isFeatured      Boolean  @default(false)
+  isAiOptimized   Boolean  @default(false)
+  estimatedTime   Int      @default(5) // minutes
+  version         String   @default("1.0.0")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model EnvironmentVariable {
+  id          String   @id @default(uuid())
+  projectId   String
+  name        String
+  value       String   // Plaintext placeholder for now, use ProjectSecret for real secrets
+  environment String   @default("development")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  workspaceId String?
+  userId      String?
+  action      String
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
+  user        User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  type      String   // E.g. INFO, WARNING, SUCCESS
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Invitation {
+  id        String   @id @default(uuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model ApiKey {
+  id        String   @id @default(uuid())
+  userId    String
+  name      String
+  key       String   @unique
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+  lastUsedAt DateTime?
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Webhook {
+  id        String   @id @default(uuid())
+  projectId String
+  url       String
+  events    String[] // e.g. ["deployment.success", "push"]
+  secret    String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model AiSession {
+  id          String   @id @default(uuid())
+  projectId   String
+  userId      String?
+  prompt      String   @db.Text
+  response    String   @db.Text
+  tokensUsed  Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+model Favorite {
+  id        String   @id @default(uuid())
+  projectId String
+  userId    String
+  createdAt DateTime @default(now())
+
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+}
+
+model RecentProject {
+  id        String   @id @default(uuid())
+  projectId String
+  userId    String
+  viewedAt  DateTime @default(now())
+
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+}
+
+// -----------------------------------------------------------------------------
+// WORKSPACE PROVISIONING & INSTANCES
+// -----------------------------------------------------------------------------
+
+model WorkspaceInstance {
+  id             String    @id @default(uuid())
+  projectId      String
+  status         String    @default("STOPPED") // QUEUED, ALLOCATING_VM, PREPARING_FILESYSTEM, DOWNLOADING_BASE_IMAGE, INITIALIZING_RUNTIME, CLONING_REPOSITORY, SCANNING_REPOSITORY, DETECTING_FRAMEWORK, INSTALLING_DEPENDENCIES, GENERATING_AI_CONTEXT, BUILDING_PROJECT, RUNNING_HEALTH_CHECKS, STARTING_SERVICES, READY, STOPPED, FAILED
+  
+  framework      String?
+  language       String?
+  runtime        String?
+  packageManager String?
+  
+  cpu            Float?    @default(2.0)
+  memory         Int?      @default(4096)
+  storage        Int?      @default(10240)
+  
+  nodeVersion    String?
+  dockerVersion  String?
+  
+  health         String?   @default("HEALTHY") // HEALTHY, UNHEALTHY, UNKNOWN
+  
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  project        Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  jobs           ProvisionJob[]
+  logs           WorkspaceLog[]
+  snapshots      WorkspaceSnapshot[]
+  environments   WorkspaceEnvironment[]
+  terminalSessions WorkspaceTerminalSession[]
+}
+
+model ProvisionJob {
+  id               String    @id @default(uuid())
+  workspaceId      String
+  projectId        String
+  status           String    @default("PENDING") // PENDING, RUNNING, SUCCESS, FAILED, CANCELLED
+  startedAt        DateTime?
+  finishedAt       DateTime?
+  duration         Int?      // milliseconds
+  currentStep      String?
+  retryCount       Int       @default(0)
+  error            String?   @db.Text
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  workspace        WorkspaceInstance @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  project          Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model WorkspaceLog {
+  id               String    @id @default(uuid())
+  workspaceId      String
+  message          String    @db.Text
+  level            String    @default("INFO") // INFO, SUCCESS, WARNING, ERROR, DEBUG
+  timestamp        DateTime  @default(now())
+  metadata         Json?
+
+  workspace        WorkspaceInstance @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+model WorkspaceSnapshot {
+  id               String    @id @default(uuid())
+  workspaceId      String
+  name             String
+  description      String?
+  storagePath      String
+  createdAt        DateTime  @default(now())
+
+  workspace        WorkspaceInstance @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+model WorkspaceEnvironment {
+  id               String    @id @default(uuid())
+  workspaceId      String
+  name             String
+  value            String
+  isSecret         Boolean   @default(false)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  workspace        WorkspaceInstance @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, name])
+}
+
+model WorkspaceTerminalSession {
+  id               String    @id @default(uuid())
+  workspaceId      String
+  userId           String?
+  startedAt        DateTime  @default(now())
+  endedAt          DateTime?
+  status           String    @default("ACTIVE") // ACTIVE, CLOSED
+
+  workspace        WorkspaceInstance @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user             User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+}

@@ -5,10 +5,39 @@ import { cn } from "../../utils/cn";
 import { Search, Menu, Plus, Bell, ChevronDown, Globe } from "lucide-react";
 import Image from "next/image";
 import { useSearchStore } from "../../store/search-store";
+import { useNotificationStore } from "../../store/notification-store";
+import Link from "next/link";
+import { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export function Topbar() {
   const { setMobileOpen } = useSidebarStore();
   const { setOpen } = useSearchStore();
+  const { unreadCount } = useNotificationStore();
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [recentNotifications, setRecentNotifications] = useState<any[]>([]);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsNotificationsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (isNotificationsOpen) {
+      fetch('/api/notifications?limit=5&userId=mock-user-id')
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) setRecentNotifications(data);
+        })
+        .catch(() => {});
+    }
+  }, [isNotificationsOpen]);
 
   return (
     <header className="h-16 border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-md sticky top-0 z-30 px-4 flex items-center justify-between shrink-0">
@@ -55,10 +84,69 @@ export function Topbar() {
           <span>Deploy</span>
         </button>
         
-        <button className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors relative">
-          <Bell className="w-5 h-5" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#8b5cf6] rounded-full border-2 border-[#0a0a0a]" />
-        </button>
+        <div className="relative" ref={dropdownRef}>
+          <button 
+            onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+            className={cn(
+              "w-8 h-8 flex items-center justify-center rounded-lg transition-colors relative",
+              isNotificationsOpen ? "bg-white/10 text-white" : "text-gray-400 hover:text-white hover:bg-white/5"
+            )}
+          >
+            <Bell className="w-5 h-5" />
+            {unreadCount > 0 && (
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#8b5cf6] rounded-full border-2 border-[#0a0a0a]" />
+            )}
+          </button>
+          
+          <AnimatePresence>
+            {isNotificationsOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                transition={{ duration: 0.15 }}
+                className="absolute right-0 top-full mt-2 w-80 bg-[#0a0a0a] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50 flex flex-col"
+              >
+                <div className="p-3 border-b border-white/5 flex items-center justify-between bg-[#141414]">
+                  <h3 className="font-medium text-white text-sm">Notifications</h3>
+                  {unreadCount > 0 && (
+                    <span className="text-[10px] bg-[#8b5cf6]/20 text-[#8b5cf6] px-2 py-0.5 rounded-full font-medium">
+                      {unreadCount} unread
+                    </span>
+                  )}
+                </div>
+                
+                <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                  {recentNotifications.length > 0 ? (
+                    recentNotifications.map(n => (
+                      <div key={n.id} className="p-3 border-b border-white/5 hover:bg-white/5 transition-colors flex gap-3">
+                        <div className={`mt-1 w-1.5 h-1.5 rounded-full shrink-0 ${n.status === 'UNREAD' || n.status === 'unread' ? 'bg-[#8b5cf6]' : 'bg-transparent'}`} />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-gray-200 truncate">{n.title}</p>
+                          <p className="text-xs text-gray-400 line-clamp-1 mt-0.5">{n.message}</p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-6 text-center text-gray-500 text-sm">
+                      No recent notifications
+                    </div>
+                  )}
+                </div>
+                
+                <div className="p-2 border-t border-white/5 bg-[#141414]">
+                  <Link 
+                    href="/dashboard/notifications" 
+                    onClick={() => setIsNotificationsOpen(false)}
+                    className="block w-full text-center py-1.5 text-xs text-gray-400 hover:text-white transition-colors"
+                  >
+                    View all notifications
+                  </Link>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
         
         <button className="hidden sm:flex items-center justify-center w-8 h-8 rounded-lg bg-[#8b5cf6] text-white hover:bg-[#7c3aed] transition-colors shadow-[0_0_15px_rgba(139,92,246,0.2)]">
           <Plus className="w-5 h-5" />

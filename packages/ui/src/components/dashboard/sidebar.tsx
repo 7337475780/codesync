@@ -23,10 +23,29 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { motion } from "framer-motion";
-
+import { useNotificationStore } from "../../store/notification-store";
+import { useEffect } from "react";
 export function Sidebar() {
   const { isCollapsed, toggleSidebar } = useSidebarStore();
+  const { unreadCount, setUnreadCount } = useNotificationStore();
   const pathname = usePathname();
+
+  useEffect(() => {
+    // Poll for unread count every 30 seconds
+    const fetchUnread = async () => {
+      try {
+        const res = await fetch('/api/notifications/unread?userId=mock-user-id');
+        const data = await res.json();
+        if (data.unreadCount !== undefined) {
+          setUnreadCount(data.unreadCount);
+        }
+      } catch (e) {}
+    };
+    
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 30000);
+    return () => clearInterval(interval);
+  }, [setUnreadCount]);
 
   const navItems = [
     { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -40,7 +59,7 @@ export function Sidebar() {
   ];
 
   const bottomItems = [
-    { label: "Notifications", href: "/dashboard/notifications", icon: Bell, badge: 3 },
+    { label: "Notifications", href: "/dashboard/notifications", icon: Bell, badge: unreadCount > 0 ? unreadCount : undefined },
     { label: "Settings", href: "/dashboard/settings", icon: Settings },
   ];
 

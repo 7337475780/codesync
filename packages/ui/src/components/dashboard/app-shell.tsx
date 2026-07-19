@@ -8,9 +8,23 @@ import { cn } from "../../utils/cn";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { CommandPalette } from "./command-palette";
 
+import { usePathname } from "next/navigation";
+
 export function AppShell({ children }: { children: ReactNode }) {
   const { isCollapsed } = useSidebarStore();
   const shouldReduceMotion = useReducedMotion();
+  const pathname = usePathname();
+
+  const isEditor = pathname?.includes("/editor");
+
+  if (isEditor) {
+    return (
+      <div className="flex h-screen w-screen bg-background overflow-hidden text-text-primary">
+        {children}
+        <CommandPalette />
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-background overflow-hidden text-text-primary selection:bg-primary/30">

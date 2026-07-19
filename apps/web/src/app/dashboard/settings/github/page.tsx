@@ -1,70 +1,74 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
 import { SettingsHeader } from '@/components/settings/settings-header';
 import { Card } from '@codesync/ui/components/ui/card';
 import { Button } from '@codesync/ui/components/ui/button';
-import { Github, Link as LinkIcon, ExternalLink } from 'lucide-react';
+import { toast } from 'sonner';
+import { Loader2, Github } from 'lucide-react';
 
-export const metadata = {
-  title: 'GitHub Settings | CodeSync',
-};
+export default function GitHubSettingsPage() {
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [isConnected, setIsConnected] = useState(true);
 
-export default function GithubSettingsPage() {
+  const handleConnect = async () => {
+    setIsConnecting(true);
+    // Simulate OAuth flow
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    setIsConnected(true);
+    setIsConnecting(false);
+    toast.success('Successfully connected to GitHub');
+  };
+
+  const handleDisconnect = async () => {
+    setIsConnecting(true);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    setIsConnected(false);
+    setIsConnecting(false);
+    toast.success('Disconnected from GitHub');
+  };
+
   return (
     <div className="space-y-6">
       <SettingsHeader 
         title="GitHub Integration" 
-        description="Connect your GitHub account to sync repositories and manage deployments."
+        description="Manage your GitHub connection to import repositories and sync commits."
       />
       
       <div className="space-y-8">
         <Card className="p-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/50 pb-6 mb-6">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-6">
+            <div className="flex items-start gap-4">
               <div className="bg-secondary p-3 rounded-full">
-                <Github className="h-8 w-8" />
+                <Github className="w-8 h-8" />
               </div>
               <div>
-                <h3 className="text-lg font-bold">Connected to GitHub</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Connected as <strong>@tharun</strong>
+                <h3 className="text-lg font-medium">GitHub Account</h3>
+                <p className="text-sm text-muted-foreground mt-1 max-w-md">
+                  Connect your GitHub account to enable automatic deployments and repository syncing.
                 </p>
+                {isConnected && (
+                  <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                    </span>
+                    Connected as <strong className="text-foreground">@tharun</strong>
+                  </div>
+                )}
               </div>
             </div>
-            <Button variant="outline" className="text-destructive border-destructive/50 hover:bg-destructive/10 hover:text-destructive">
-              Disconnect
-            </Button>
-          </div>
 
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h4 className="font-semibold text-lg">Connected Repositories</h4>
-              <Button size="sm">
-                <LinkIcon className="h-4 w-4 mr-2" />
-                Connect Repository
-              </Button>
-            </div>
-
-            <div className="rounded-md border divide-y">
-              <div className="p-4 flex items-center justify-between">
-                <div>
-                  <a href="#" className="font-medium text-primary hover:underline flex items-center gap-1">
-                    codesync/web-client
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                  <p className="text-sm text-muted-foreground mt-1">Last synced 2 hours ago</p>
-                </div>
-                <Button variant="ghost" size="sm">Configure</Button>
-              </div>
-              <div className="p-4 flex items-center justify-between">
-                <div>
-                  <a href="#" className="font-medium text-primary hover:underline flex items-center gap-1">
-                    codesync/api-server
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                  <p className="text-sm text-muted-foreground mt-1">Last synced 5 hours ago</p>
-                </div>
-                <Button variant="ghost" size="sm">Configure</Button>
-              </div>
+            <div>
+              {isConnected ? (
+                <Button variant="outline" onClick={handleDisconnect} disabled={isConnecting}>
+                  {isConnecting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Disconnecting</> : 'Disconnect'}
+                </Button>
+              ) : (
+                <Button onClick={handleConnect} disabled={isConnecting}>
+                  {isConnecting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Connecting</> : 'Connect GitHub'}
+                </Button>
+              )}
             </div>
           </div>
         </Card>

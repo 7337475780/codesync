@@ -1,84 +1,84 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
 import { SettingsHeader } from '@/components/settings/settings-header';
 import { Card } from '@codesync/ui/components/ui/card';
-import { Input } from '@codesync/ui/components/ui/input';
 import { Button } from '@codesync/ui/components/ui/button';
-import { Rocket, Plus, Trash } from 'lucide-react';
-
-export const metadata = {
-  title: 'Deployments Settings | CodeSync',
-};
+import { updatePreferences } from '@/actions/settings';
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
 export default function DeploymentsSettingsPage() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    const formData = new FormData(e.currentTarget);
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+      const result = await updatePreferences(data);
+      if (result.success) {
+        toast.success(result.message || 'Deployment settings updated');
+      } else {
+        toast.error('Failed to update deployment settings');
+      }
+    } catch (error) {
+      toast.error('An unexpected error occurred');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <SettingsHeader 
         title="Deployments" 
-        description="Configure your deployment providers and environment variables."
+        description="Configure auto-deployment rules and default branch settings."
       />
       
       <div className="space-y-8">
         <Card className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-medium">Deployment Providers</h3>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="border rounded-lg p-4 flex flex-col justify-between h-[150px]">
-              <div className="flex items-center gap-3">
-                <div className="h-8 w-8 bg-black rounded-full flex items-center justify-center text-white">
-                  <svg viewBox="0 0 76 65" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-4 w-4">
-                    <path d="M37.5274 0L75.0548 65H0L37.5274 0Z" fill="white"/>
-                  </svg>
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            <div className="space-y-4">
+              <div className="pt-2 space-y-4">
+                <div className="flex items-start space-x-3">
+                  <input name="autoDeploy" type="checkbox" className="mt-1 h-4 w-4 rounded border-gray-300 text-primary" defaultChecked />
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium leading-none">Auto-deploy on push</label>
+                    <p className="text-sm text-muted-foreground">Automatically trigger a deployment when pushing to production branches.</p>
+                  </div>
                 </div>
-                <h4 className="font-semibold text-lg">Vercel</h4>
-              </div>
-              <Button variant="outline" className="w-full">Connect</Button>
-            </div>
-
-            <div className="border rounded-lg p-4 flex flex-col justify-between h-[150px]">
-              <div className="flex items-center gap-3">
-                <div className="h-8 w-8 bg-[#00C7B7] rounded-full flex items-center justify-center text-white">
-                  <Rocket className="h-4 w-4" />
+                <div className="flex items-start space-x-3">
+                  <input name="previewEnvs" type="checkbox" className="mt-1 h-4 w-4 rounded border-gray-300 text-primary" defaultChecked />
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium leading-none">Preview Environments</label>
+                    <p className="text-sm text-muted-foreground">Automatically create preview deployments for pull requests.</p>
+                  </div>
                 </div>
-                <h4 className="font-semibold text-lg">Netlify</h4>
               </div>
-              <Button variant="outline" className="w-full">Connect</Button>
-            </div>
-          </div>
-        </Card>
 
-        <Card className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h3 className="text-lg font-medium">Environment Variables</h3>
-              <p className="text-sm text-muted-foreground mt-1">Shared environment variables for all deployments.</p>
+              <div className="space-y-2 mt-4 pt-4 border-t border-border/50">
+                <label className="text-sm font-medium">Production Branch</label>
+                <select name="productionBranch" className="flex h-10 w-full items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-sm max-w-md">
+                  <option value="main">main</option>
+                  <option value="master">master</option>
+                  <option value="production">production</option>
+                </select>
+                <p className="text-[0.8rem] text-muted-foreground">
+                  The branch that serves the live production deployment.
+                </p>
+              </div>
             </div>
-            <Button size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Variable
-            </Button>
-          </div>
 
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <Input defaultValue="NEXT_PUBLIC_API_URL" className="font-mono flex-1" />
-              <Input type="password" defaultValue="https://api.codesync.dev" className="font-mono flex-1" />
-              <Button variant="ghost" size="icon" className="text-destructive">
-                <Trash className="h-4 w-4" />
+            <div className="pt-4 border-t border-border/50">
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving</> : 'Save settings'}
               </Button>
             </div>
-            <div className="flex items-center gap-4">
-              <Input defaultValue="DATABASE_URL" className="font-mono flex-1" />
-              <Input type="password" defaultValue="postgres://..." className="font-mono flex-1" />
-              <Button variant="ghost" size="icon" className="text-destructive">
-                <Trash className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="pt-4 flex justify-end">
-              <Button>Save variables</Button>
-            </div>
-          </div>
+          </form>
         </Card>
       </div>
     </div>

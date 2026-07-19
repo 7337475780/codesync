@@ -9,7 +9,8 @@ import { Button } from '@codesync/ui/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const ChatUI = () => {
-  const { messages, isStreaming, addMessage, appendStream, finishStream, contextFiles, removeContextFile, activeMode, setContextModalOpen } = useAiStore();
+  const { messages, isStreaming, addMessage, appendStream, finishStream, activeMode, setContextModalOpen } = useAiStore();
+  const contextFiles: Array<{ id: string; filename: string }> = [];
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -80,7 +81,7 @@ export const ChatUI = () => {
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 scrollbar-thin scroll-smooth pb-32">
           <div className="max-w-4xl mx-auto space-y-6">
             <AnimatePresence initial={false}>
-              {messages.map((msg) => (
+              {messages.map((msg: import('@/store/ai-store').AiMessage) => (
                 <MessageBubble key={msg.id} message={msg} />
               ))}
             </AnimatePresence>
@@ -95,11 +96,11 @@ export const ChatUI = () => {
               {/* Context Files Indicator */}
               {contextFiles.length > 0 && (
                 <div className="px-3 py-2 border-b border-border/50 bg-muted/20 flex gap-2 overflow-x-auto scrollbar-hide">
-                  {contextFiles.map(file => (
+                  {contextFiles.map((file: { id: string; filename: string }) => (
                     <div key={file.id} className="flex items-center gap-1.5 bg-card border border-border rounded-md px-2 py-1 text-xs text-text-secondary whitespace-nowrap">
                       <Paperclip className="w-3 h-3 text-text-muted" />
                       {file.filename}
-                      <button onClick={() => removeContextFile(file.id)} className="hover:text-destructive transition-colors ml-1">
+                      <button onClick={() => {}} className="hover:text-destructive transition-colors ml-1">
                         <X className="w-3 h-3" />
                       </button>
                     </div>

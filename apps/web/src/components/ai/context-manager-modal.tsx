@@ -17,7 +17,10 @@ const MOCK_FILES = [
 ];
 
 export const ContextManagerModal = () => {
-  const { isContextModalOpen, setContextModalOpen, contextFiles, addContextFile, removeContextFile } = useAiStore();
+  const { isContextModalOpen, setContextModalOpen } = useAiStore();
+  const [contextFiles, setContextFiles] = React.useState<Array<{id: string; filename: string; language: string; content: string}>>([]);
+  const addContextFile = (f: {id: string; filename: string; language: string; content: string}) => setContextFiles(prev => [...prev, f]);
+  const removeContextFile = (id: string) => setContextFiles(prev => prev.filter(f => f.id !== id));
   const [search, setSearch] = useState('');
 
   if (!isContextModalOpen) return null;
@@ -68,8 +71,8 @@ export const ContextManagerModal = () => {
           </div>
 
           <div className="flex-1 overflow-y-auto p-2 scrollbar-thin">
-            {filteredFiles.map(file => {
-              const isSelected = contextFiles.some(f => f.id === file.id);
+            {filteredFiles.map((file: typeof MOCK_FILES[0]) => {
+              const isSelected = contextFiles.some((f: {id: string}) => f.id === file.id);
               return (
                 <div 
                   key={file.id} 

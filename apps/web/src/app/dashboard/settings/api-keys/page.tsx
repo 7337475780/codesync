@@ -1,80 +1,72 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
 import { SettingsHeader } from '@/components/settings/settings-header';
 import { Card } from '@codesync/ui/components/ui/card';
 import { Button } from '@codesync/ui/components/ui/button';
+import { toast } from 'sonner';
 import { Key, Copy, Plus } from 'lucide-react';
 
-export const metadata = {
-  title: 'API Keys | CodeSync',
-};
-
 export default function ApiKeysSettingsPage() {
+  const [keys, setKeys] = useState([
+    { id: '1', name: 'Production API Key', prefix: 'cs_live_...', created: '2026-07-01' },
+    { id: '2', name: 'Development API Key', prefix: 'cs_test_...', created: '2026-07-15' },
+  ]);
+
+  const handleCreate = () => {
+    toast.success('API Key created successfully');
+  };
+
+  const handleCopy = () => {
+    toast.success('API Key copied to clipboard');
+  };
+
   return (
     <div className="space-y-6">
       <SettingsHeader 
         title="API Keys" 
-        description="Manage your API keys for programmatic access to CodeSync."
+        description="Manage keys for programmatic access to the CodeSync API."
       />
       
-      <div className="space-y-8">
-        <Card className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h3 className="text-lg font-medium">Personal Access Tokens</h3>
-              <p className="text-sm text-muted-foreground mt-1">Tokens you have generated that can be used to access the CodeSync API.</p>
-            </div>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Generate new token
-            </Button>
-          </div>
+      <div className="space-y-6">
+        <div className="flex justify-end">
+          <Button onClick={handleCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            Generate New Key
+          </Button>
+        </div>
 
-          <div className="rounded-md border">
-            <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-muted/50 border-b">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-md">
-                  <Key className="h-4 w-4 text-primary" />
-                </div>
-                <div>
-                  <p className="font-medium text-sm">CLI Development</p>
-                  <p className="text-xs text-muted-foreground">Created yesterday • Never used</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="text-xs bg-secondary px-2 py-1 rounded-md text-secondary-foreground font-mono">
-                  cs_live_*************
-                </span>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <Copy className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="sm" className="text-destructive h-8">
-                  Revoke
-                </Button>
-              </div>
-            </div>
-            
-            <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-md">
-                  <Key className="h-4 w-4 text-primary" />
-                </div>
-                <div>
-                  <p className="font-medium text-sm">CI/CD Pipeline Token</p>
-                  <p className="text-xs text-muted-foreground">Created 2 months ago • Last used 2 hours ago</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="text-xs bg-secondary px-2 py-1 rounded-md text-secondary-foreground font-mono">
-                  cs_live_*************
-                </span>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <Copy className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="sm" className="text-destructive h-8">
-                  Revoke
-                </Button>
-              </div>
-            </div>
+        <Card className="p-0 overflow-hidden border-border/50">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="text-xs text-muted-foreground uppercase bg-secondary/30">
+                <tr>
+                  <th className="px-6 py-4">Name</th>
+                  <th className="px-6 py-4">Key Prefix</th>
+                  <th className="px-6 py-4">Created</th>
+                  <th className="px-6 py-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/50">
+                {keys.map((key) => (
+                  <tr key={key.id} className="hover:bg-muted/30 transition-colors">
+                    <td className="px-6 py-4 font-medium flex items-center gap-2">
+                      <Key className="h-4 w-4 text-muted-foreground" />
+                      {key.name}
+                    </td>
+                    <td className="px-6 py-4 font-mono text-muted-foreground">{key.prefix}</td>
+                    <td className="px-6 py-4 text-muted-foreground">{key.created}</td>
+                    <td className="px-6 py-4 text-right">
+                      <Button variant="ghost" size="sm" onClick={handleCopy}>
+                        <Copy className="h-4 w-4 mr-2" />
+                        Copy
+                      </Button>
+                      <Button variant="ghost" size="sm" className="text-destructive ml-2">Revoke</Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </Card>
       </div>

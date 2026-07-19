@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Command } from "cmdk";
 import { useSearchStore } from "../../store/search-store";
 import { useRouter } from "next/navigation";
-import { Search, FolderGit2, Copy, Users, Settings, Sparkles, Rocket, FileCode } from "lucide-react";
+import { Search, FolderGit2, Copy, Users, Settings, Sparkles, Rocket, FileCode, Clock, Star, Pin, Github } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 export function CommandPalette() {
@@ -53,14 +53,17 @@ export function CommandPalette() {
           >
             <Command 
               className="flex flex-col w-full h-full max-h-[60vh]"
-              shouldFilter={false} // We will implement fuzzy search later
+              filter={(value, search) => {
+                if (value.toLowerCase().includes(search.toLowerCase())) return 1;
+                return 0;
+              }}
             >
               <div className="flex items-center px-4 border-b border-white/5 relative">
                 <Search className="w-5 h-5 text-gray-400 absolute left-4" />
                 <Command.Input 
                   value={query}
                   onValueChange={setQuery}
-                  placeholder="Search projects, templates, commands..." 
+                  placeholder="Search projects, files, commands..." 
                   className="w-full bg-transparent text-white placeholder-gray-500 h-14 pl-10 pr-4 outline-none text-lg"
                   autoFocus
                 />
@@ -74,9 +77,31 @@ export function CommandPalette() {
                   No results found for "{query}".
                 </Command.Empty>
 
-                <Command.Group heading="Suggestions" className="px-2 text-xs font-medium text-gray-500 mb-2 mt-2">
+                <Command.Group heading="Recent" className="px-2 text-xs font-medium text-gray-500 mb-2 mt-2 [&_[cmdk-group-heading]]:mb-2 [&_[cmdk-group-heading]]:px-2">
+                  <Command.Item onSelect={() => runCommand(() => router.push('/dashboard/projects/next-app'))} className="flex items-center gap-3 px-3 py-3 text-sm text-gray-300 rounded-lg hover:bg-white/5 hover:text-white cursor-pointer aria-selected:bg-white/5 aria-selected:text-white">
+                    <Clock className="w-4 h-4 text-gray-400" />
+                    <span>next-app-frontend</span>
+                  </Command.Item>
+                  <Command.Item onSelect={() => runCommand(() => router.push('/dashboard/projects/backend-api'))} className="flex items-center gap-3 px-3 py-3 text-sm text-gray-300 rounded-lg hover:bg-white/5 hover:text-white cursor-pointer aria-selected:bg-white/5 aria-selected:text-white">
+                    <Clock className="w-4 h-4 text-gray-400" />
+                    <span>backend-api-go</span>
+                  </Command.Item>
+                </Command.Group>
+
+                <Command.Separator className="h-px bg-white/5 my-2" />
+
+                <Command.Group heading="Favorites" className="px-2 text-xs font-medium text-gray-500 mb-2 mt-2 [&_[cmdk-group-heading]]:mb-2 [&_[cmdk-group-heading]]:px-2">
+                  <Command.Item onSelect={() => runCommand(() => router.push('/dashboard/projects/core-lib'))} className="flex items-center gap-3 px-3 py-3 text-sm text-gray-300 rounded-lg hover:bg-white/5 hover:text-white cursor-pointer aria-selected:bg-white/5 aria-selected:text-white">
+                    <Star className="w-4 h-4 text-yellow-400" />
+                    <span>core-lib (React)</span>
+                  </Command.Item>
+                </Command.Group>
+
+                <Command.Separator className="h-px bg-white/5 my-2" />
+
+                <Command.Group heading="Pinned Commands" className="px-2 text-xs font-medium text-gray-500 mb-2 mt-2 [&_[cmdk-group-heading]]:mb-2 [&_[cmdk-group-heading]]:px-2">
                   <Command.Item onSelect={() => runCommand(() => router.push('/dashboard/projects/new'))} className="flex items-center gap-3 px-3 py-3 text-sm text-gray-300 rounded-lg hover:bg-white/5 hover:text-white cursor-pointer aria-selected:bg-[#8b5cf6]/20 aria-selected:text-white">
-                    <FolderGit2 className="w-4 h-4 text-[#8b5cf6]" />
+                    <Pin className="w-4 h-4 text-[#8b5cf6]" />
                     <span>Create New Project</span>
                   </Command.Item>
                   <Command.Item onSelect={() => runCommand(() => router.push('/dashboard/templates'))} className="flex items-center gap-3 px-3 py-3 text-sm text-gray-300 rounded-lg hover:bg-white/5 hover:text-white cursor-pointer aria-selected:bg-white/5 aria-selected:text-white">
@@ -91,11 +116,7 @@ export function CommandPalette() {
 
                 <Command.Separator className="h-px bg-white/5 my-2" />
 
-                <Command.Group heading="Navigation" className="px-2 text-xs font-medium text-gray-500 mb-2 mt-2">
-                  <Command.Item onSelect={() => runCommand(() => router.push('/dashboard'))} className="flex items-center gap-3 px-3 py-3 text-sm text-gray-300 rounded-lg hover:bg-white/5 hover:text-white cursor-pointer aria-selected:bg-white/5 aria-selected:text-white">
-                    <Search className="w-4 h-4 text-gray-400" />
-                    <span>Dashboard Home</span>
-                  </Command.Item>
+                <Command.Group heading="Navigation & Files" className="px-2 text-xs font-medium text-gray-500 mb-2 mt-2 [&_[cmdk-group-heading]]:mb-2 [&_[cmdk-group-heading]]:px-2">
                   <Command.Item onSelect={() => runCommand(() => router.push('/dashboard/deployments'))} className="flex items-center gap-3 px-3 py-3 text-sm text-gray-300 rounded-lg hover:bg-white/5 hover:text-white cursor-pointer aria-selected:bg-white/5 aria-selected:text-white">
                     <Rocket className="w-4 h-4 text-emerald-400" />
                     <span>Deployments</span>
@@ -107,6 +128,14 @@ export function CommandPalette() {
                   <Command.Item onSelect={() => runCommand(() => router.push('/dashboard/settings'))} className="flex items-center gap-3 px-3 py-3 text-sm text-gray-300 rounded-lg hover:bg-white/5 hover:text-white cursor-pointer aria-selected:bg-white/5 aria-selected:text-white">
                     <Settings className="w-4 h-4 text-gray-400" />
                     <span>Workspace Settings</span>
+                  </Command.Item>
+                  <Command.Item onSelect={() => runCommand(() => router.push('/dashboard/github'))} className="flex items-center gap-3 px-3 py-3 text-sm text-gray-300 rounded-lg hover:bg-white/5 hover:text-white cursor-pointer aria-selected:bg-white/5 aria-selected:text-white">
+                    <Github className="w-4 h-4 text-white" />
+                    <span>GitHub Integrations</span>
+                  </Command.Item>
+                  <Command.Item onSelect={() => runCommand(() => console.log('File search triggered'))} className="flex items-center gap-3 px-3 py-3 text-sm text-gray-300 rounded-lg hover:bg-white/5 hover:text-white cursor-pointer aria-selected:bg-white/5 aria-selected:text-white">
+                    <FileCode className="w-4 h-4 text-cyan-400" />
+                    <span>Search all files...</span>
                   </Command.Item>
                 </Command.Group>
                 

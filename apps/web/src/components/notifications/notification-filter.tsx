@@ -54,7 +54,7 @@ export const NotificationFilter = () => {
                 <span>{cat.label}</span>
               </div>
               {unreadCount > 0 && cat.label !== 'Unread' && (
-                <span className={`px-2 py-0.5 rounded-full text-[10px] ${isActive ? 'bg-primary text-primary-foreground' : 'bg-muted text-text-muted'}`}>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] ${isActive ? 'bg-primary text-white' : 'bg-muted text-text-muted'}`}>
                   {unreadCount > 99 ? '99+' : unreadCount}
                 </span>
               )}

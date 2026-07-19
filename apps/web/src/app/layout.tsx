@@ -87,7 +87,7 @@ export default function RootLayout({
         <link rel="icon" href="/logo.png" sizes="any" />
         <link rel="apple-touch-icon" href="/logo.png" />
       </head>
-      <body className="min-h-screen bg-[#000000] text-gray-100 font-sans selection:bg-[#8b5cf6]/30 selection:text-white">
+      <body suppressHydrationWarning className="min-h-screen bg-[#000000] text-gray-100 font-sans selection:bg-[#8b5cf6]/30 selection:text-white">
         {children}
         <Toaster theme="dark" position="bottom-right" />
       </body>

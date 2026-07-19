@@ -3,6 +3,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  engineType = "library"
 }
 
 datasource db {
@@ -14,54 +15,194 @@ datasource db {
 // -----------------------------------------------------------------------------
 
 model User {
-  id            String    @id @default(uuid())
-  email         String    @unique
-  name          String?
-  avatarUrl     String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  deletedAt     DateTime?
+  id        String    @id @default(uuid())
+  email     String    @unique
+  name      String?
+  avatarUrl String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
-  profile       Profile?
-  workspaceMembers WorkspaceMember[]
-  projectMembers ProjectMember[]
-  apiKeys       ApiKey[]
-  auditLogs     AuditLog[]
-  notifications Notification[]
-  aiSessions    AiSession[]
-  favorites     Favorite[]
-  recentProjects RecentProject[]
+  profile                   Profile?
+  organizationMembers       OrganizationMember[]
+  teamMembers               TeamMember[]
+  workspaceMembers          WorkspaceMember[]
+  projectMembers            ProjectMember[]
+  apiKeys                   ApiKey[]
+  auditLogs                 AuditLog[]
+  notifications             Notification[]
+  aiSessions                AiSession[]
+  favorites                 Favorite[]
+  recentProjects            RecentProject[]
   workspaceTerminalSessions WorkspaceTerminalSession[]
+  memberSessions            MemberSession[]
+  notificationPreferences   NotificationPreference[]
 }
 
 model Profile {
-  id        String   @id @default(uuid())
-  userId    String   @unique
-  bio       String?
-  website   String?
-  githubUrl String?
+  id         String   @id @default(uuid())
+  userId     String   @unique
+  bio        String?
+  website    String?
+  githubUrl  String?
   twitterUrl String?
-  theme     String   @default("system")
+  theme      String   @default("system")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// -----------------------------------------------------------------------------
+// ORGANIZATION & TEAM MANAGEMENT (Phase 3.6)
+// -----------------------------------------------------------------------------
+
+model Organization {
+  id           String    @id @default(uuid())
+  name         String
+  slug         String    @unique
+  logoUrl      String?
+  billingEmail String?
+  domain       String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  members     OrganizationMember[]
+  teams       Team[]
+  invitations OrganizationInvitation[]
+  workspaces  Workspace[]
+  auditLogs   AuditLog[]
+}
+
+model OrganizationMember {
+  id             String   @id @default(uuid())
+  organizationId String
+  userId         String
+  roleId         String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role           Role?           @relation(fields: [roleId], references: [id], onDelete: SetNull)
+  memberSessions MemberSession[]
+
+  @@unique([organizationId, userId])
+}
+
+model OrganizationInvitation {
+  id             String   @id @default(uuid())
+  organizationId String
+  email          String
+  roleId         String?
+  token          String   @unique
+  status         String   @default("PENDING") // PENDING, ACCEPTED, EXPIRED, CANCELLED
+  expiresAt      DateTime
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  role         Role?        @relation(fields: [roleId], references: [id], onDelete: SetNull)
+}
+
+model Team {
+  id             String   @id @default(uuid())
+  organizationId String
+  name           String
+  slug           String
+  description    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  members      TeamMember[]
+
+  @@unique([organizationId, slug])
+}
+
+model TeamMember {
+  id        String   @id @default(uuid())
+  teamId    String
+  userId    String
+  role      String   @default("MEMBER") // TEAM_ADMIN, MEMBER
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
 }
 
-model Workspace {
-  id          String   @id @default(uuid())
-  name        String
-  slug        String   @unique
-  logoUrl     String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  deletedAt   DateTime?
+model Role {
+  id             String   @id @default(uuid())
+  organizationId String?
+  name           String
+  description    String?
+  isSystem       Boolean  @default(false) // e.g. Owner, Admin, Developer, Designer, Viewer
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  members     WorkspaceMember[]
-  projects    Project[]
-  settings    WorkspaceSetting?
-  invitations WorkspaceInvitation[]
-  auditLogs   AuditLog[]
+  permissions Permission[]
+  orgMembers  OrganizationMember[]
+  invitations OrganizationInvitation[]
+
+  @@unique([organizationId, name])
+}
+
+model Permission {
+  id        String   @id @default(uuid())
+  roleId    String
+  action    String // e.g. workspace:deploy, billing:manage
+  createdAt DateTime @default(now())
+
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, action])
+}
+
+model WorkspacePermission {
+  id          String   @id @default(uuid())
+  workspaceId String
+  roleId      String? // Map permissions to a role at the workspace level
+  action      String // E.g. "deploy", "manage_secrets"
+  createdAt   DateTime @default(now())
+}
+
+model MemberSession {
+  id                   String   @id @default(uuid())
+  organizationMemberId String
+  userId               String
+  ipAddress            String?
+  userAgent            String?
+  lastActiveAt         DateTime @default(now())
+  createdAt            DateTime @default(now())
+
+  orgMember OrganizationMember @relation(fields: [organizationMemberId], references: [id], onDelete: Cascade)
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// -----------------------------------------------------------------------------
+// WORKSPACES & PROJECTS
+// -----------------------------------------------------------------------------
+
+model Workspace {
+  id             String    @id @default(uuid())
+  organizationId String?
+  name           String
+  slug           String    @unique
+  logoUrl        String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  organization Organization?         @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  members      WorkspaceMember[]
+  projects     Project[]
+  settings     WorkspaceSetting?
+  invitations  WorkspaceInvitation[]
+  auditLogs    AuditLog[]
 }
 
 model WorkspaceMember {
@@ -72,8 +213,8 @@ model WorkspaceMember {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([workspaceId, userId])
 }
@@ -85,7 +226,7 @@ model WorkspaceSetting {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 }
 
 model WorkspaceInvitation {
@@ -98,87 +239,87 @@ model WorkspaceInvitation {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 }
 
 model Project {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   workspaceId String
   name        String
   slug        String
   description String?
   icon        String?
   color       String?
-  visibility  String   @default("PRIVATE") // PUBLIC, PRIVATE
+  visibility  String    @default("PRIVATE") // PUBLIC, PRIVATE
   framework   String?
   runtime     String?
-  isAiEnabled Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isAiEnabled Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
 
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  members     ProjectMember[]
-  repository  Repository?
-  settings    ProjectSetting?
-  activities  ProjectActivity[]
-  secrets     ProjectSecret[]
-  tags        ProjectTag[]
-  deployments Deployment[]
-  webhooks    Webhook[]
-  aiSessions  AiSession[]
-  favorites   Favorite[]
-  recentViews RecentProject[]
+  workspace          Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  members            ProjectMember[]
+  repository         Repository?
+  settings           ProjectSetting?
+  activities         ProjectActivity[]
+  secrets            ProjectSecret[]
+  tags               ProjectTag[]
+  deployments        Deployment[]
+  webhooks           Webhook[]
+  aiSessions         AiSession[]
+  favorites          Favorite[]
+  recentViews        RecentProject[]
   workspaceInstances WorkspaceInstance[]
-  provisionJobs ProvisionJob[]
+  provisionJobs      ProvisionJob[]
 
   @@unique([workspaceId, slug])
 }
 
 model ProjectMember {
-  id          String   @id @default(uuid())
-  projectId   String
-  userId      String
-  role        String   @default("MEMBER") // ADMIN, MEMBER, VIEWER
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(uuid())
+  projectId String
+  userId    String
+  role      String   @default("MEMBER") // ADMIN, MEMBER, VIEWER
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project     Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   permissions ProjectPermission[]
 
   @@unique([projectId, userId])
 }
 
 model ProjectPermission {
-  id              String        @id @default(uuid())
+  id              String   @id @default(uuid())
   projectMemberId String
   permission      String // E.g. "deploy", "manage_secrets"
-  createdAt       DateTime      @default(now())
+  createdAt       DateTime @default(now())
 
-  projectMember   ProjectMember @relation(fields: [projectMemberId], references: [id], onDelete: Cascade)
+  projectMember ProjectMember @relation(fields: [projectMemberId], references: [id], onDelete: Cascade)
 }
 
 model ProjectSetting {
-  id          String   @id @default(uuid())
-  projectId   String   @unique
-  defaultBranch String @default("main")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(uuid())
+  projectId     String   @unique
+  defaultBranch String   @default("main")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
 model ProjectSecret {
   id          String   @id @default(uuid())
   projectId   String
   name        String
-  value       String   // Encrypted
+  value       String // Encrypted
   environment String   @default("production") // production, preview, development
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@unique([projectId, name, environment])
 }
@@ -189,7 +330,7 @@ model ProjectTag {
   name      String
   createdAt DateTime @default(now())
 
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@unique([projectId, name])
 }
@@ -199,18 +340,18 @@ model ProjectTag {
 // -----------------------------------------------------------------------------
 
 model Repository {
-  id            String   @id @default(uuid())
-  projectId     String   @unique
-  provider      String   @default("github")
+  id             String   @id @default(uuid())
+  projectId      String   @unique
+  provider       String   @default("github")
   providerRepoId String?
-  url           String?
-  defaultBranch String   @default("main")
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  url            String?
+  defaultBranch  String   @default("main")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  branches      Branch[]
-  commits       Commit[]
+  project  Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  branches Branch[]
+  commits  Commit[]
 }
 
 model Branch {
@@ -220,8 +361,8 @@ model Branch {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  repository   Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
-  commits      Commit[]
+  repository Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  commits    Commit[]
 
   @@unique([repositoryId, name])
 }
@@ -236,9 +377,9 @@ model Commit {
   authorEmail  String
   createdAt    DateTime @default(now())
 
-  repository   Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
-  branch       Branch     @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  snapshots    FileSnapshot[]
+  repository Repository     @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  branch     Branch         @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  snapshots  FileSnapshot[]
 
   @@unique([repositoryId, sha])
 }
@@ -250,7 +391,7 @@ model FileSnapshot {
   content   String   @db.Text
   createdAt DateTime @default(now())
 
-  commit    Commit   @relation(fields: [commitId], references: [id], onDelete: Cascade)
+  commit Commit @relation(fields: [commitId], references: [id], onDelete: Cascade)
 
   @@unique([commitId, path])
 }
@@ -260,29 +401,29 @@ model FileSnapshot {
 // -----------------------------------------------------------------------------
 
 model EditorSession {
-  id        String   @id @default(uuid())
+  id        String    @id @default(uuid())
   projectId String
   userId    String?
-  startedAt DateTime @default(now())
+  startedAt DateTime  @default(now())
   endedAt   DateTime?
-  status    String   @default("ACTIVE") // ACTIVE, CLOSED
+  status    String    @default("ACTIVE") // ACTIVE, CLOSED
 }
 
 model TerminalSession {
-  id        String   @id @default(uuid())
+  id        String    @id @default(uuid())
   projectId String
   userId    String?
-  startedAt DateTime @default(now())
+  startedAt DateTime  @default(now())
   endedAt   DateTime?
-  status    String   @default("ACTIVE")
+  status    String    @default("ACTIVE")
 }
 
 model CollaborativeSession {
-  id        String   @id @default(uuid())
+  id        String    @id @default(uuid())
   projectId String
-  startedAt DateTime @default(now())
+  startedAt DateTime  @default(now())
   endedAt   DateTime?
-  status    String   @default("ACTIVE")
+  status    String    @default("ACTIVE")
 }
 
 // -----------------------------------------------------------------------------
@@ -298,8 +439,8 @@ model Deployment {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  logs        DeploymentLog[]
+  project Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  logs    DeploymentLog[]
 }
 
 model DeploymentLog {
@@ -309,72 +450,138 @@ model DeploymentLog {
   level        String   @default("INFO")
   createdAt    DateTime @default(now())
 
-  deployment   Deployment @relation(fields: [deploymentId], references: [id], onDelete: Cascade)
+  deployment Deployment @relation(fields: [deploymentId], references: [id], onDelete: Cascade)
 }
 
 model ProjectActivity {
   id        String   @id @default(uuid())
   projectId String
   userId    String?
-  type      String   // E.g. PROJECT_CREATED, DEPLOYMENT_STARTED
+  type      String // E.g. PROJECT_CREATED, DEPLOYMENT_STARTED
   metadata  Json?
   createdAt DateTime @default(now())
 
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
 model ProjectTemplate {
-  id              String   @id @default(uuid())
-  name            String
-  slug            String   @unique
-  description     String?
-  coverImage      String?
-  framework       String
-  runtime         String
-  packageManager  String
-  category        String
-  difficulty      String   @default("BEGINNER")
-  tags            String[] // Arrays are supported in PostgreSQL
-  isFeatured      Boolean  @default(false)
-  isAiOptimized   Boolean  @default(false)
-  estimatedTime   Int      @default(5) // minutes
-  version         String   @default("1.0.0")
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String   @id @default(uuid())
+  name           String
+  slug           String   @unique
+  description    String?
+  coverImage     String?
+  framework      String
+  runtime        String
+  packageManager String
+  category       String
+  difficulty     String   @default("BEGINNER")
+  tags           String[] // Arrays are supported in PostgreSQL
+  isFeatured     Boolean  @default(false)
+  isAiOptimized  Boolean  @default(false)
+  estimatedTime  Int      @default(5) // minutes
+  version        String   @default("1.0.0")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
 model EnvironmentVariable {
   id          String   @id @default(uuid())
   projectId   String
   name        String
-  value       String   // Plaintext placeholder for now, use ProjectSecret for real secrets
+  value       String // Plaintext placeholder for now, use ProjectSecret for real secrets
   environment String   @default("development")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
 model AuditLog {
-  id          String   @id @default(uuid())
-  workspaceId String?
-  userId      String?
-  action      String
-  metadata    Json?
-  createdAt   DateTime @default(now())
+  id             String   @id @default(uuid())
+  organizationId String?
+  workspaceId    String?
+  userId         String?
+  action         String
+  metadata       Json?
+  createdAt      DateTime @default(now())
 
-  workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
-  user        User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  workspace    Workspace?    @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
+  user         User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
 
+// -----------------------------------------------------------------------------
+// NOTIFICATIONS & ACTIVITY (Phase 3.7)
+// -----------------------------------------------------------------------------
+
 model Notification {
+  id              String   @id @default(uuid())
+  userId          String
+  title           String
+  message         String
+  category        String   @default("GENERAL") // AI, GITHUB, DEPLOYMENT, PROJECT, TEAM, BILLING
+  priority        String   @default("NORMAL") // LOW, NORMAL, HIGH, URGENT
+  status          String   @default("UNREAD") // UNREAD, READ, ARCHIVED
+  metadata        Json?
+  activityEventId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user          User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activityEvent ActivityEvent?         @relation(fields: [activityEventId], references: [id], onDelete: SetNull)
+  deliveries    NotificationDelivery[]
+  mentions      Mention[]
+}
+
+model NotificationPreference {
   id        String   @id @default(uuid())
   userId    String
-  title     String
-  message   String
-  read      Boolean  @default(false)
-  type      String   // E.g. INFO, WARNING, SUCCESS
+  category  String // e.g. DEPLOYMENT, TEAM
+  channel   String // BROWSER, EMAIL, PUSH
+  enabled   Boolean  @default(true)
+  frequency String   @default("INSTANT") // INSTANT, HOURLY, DAILY
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, category, channel])
+}
+
+model NotificationDelivery {
+  id             String   @id @default(uuid())
+  notificationId String
+  channel        String // EMAIL, PUSH, SLACK
+  status         String   @default("PENDING") // PENDING, SENT, FAILED
+  providerId     String? // e.g., Resend Message ID
+  error          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  notification Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+}
+
+model ActivityEvent {
+  id             String   @id @default(uuid())
+  actorId        String?
+  organizationId String?
+  projectId      String?
+  action         String // e.g. DEPLOYMENT_STARTED, MEMBER_JOINED
+  entityType     String // e.g. Deployment, User
+  entityId       String
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  notifications Notification[]
+}
+
+model Mention {
+  id             String   @id @default(uuid())
+  notificationId String
+  authorId       String
+  context        String   @db.Text
+  url            String?
+  createdAt      DateTime @default(now())
+
+  notification Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
 }
 
 model Invitation {
@@ -386,15 +593,15 @@ model Invitation {
 }
 
 model ApiKey {
-  id        String   @id @default(uuid())
-  userId    String
-  name      String
-  key       String   @unique
-  expiresAt DateTime?
-  createdAt DateTime @default(now())
+  id         String    @id @default(uuid())
+  userId     String
+  name       String
+  key        String    @unique
+  expiresAt  DateTime?
+  createdAt  DateTime  @default(now())
   lastUsedAt DateTime?
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Webhook {
@@ -407,20 +614,20 @@ model Webhook {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
 model AiSession {
-  id          String   @id @default(uuid())
-  projectId   String
-  userId      String?
-  prompt      String   @db.Text
-  response    String   @db.Text
-  tokensUsed  Int      @default(0)
-  createdAt   DateTime @default(now())
+  id         String   @id @default(uuid())
+  projectId  String
+  userId     String?
+  prompt     String   @db.Text
+  response   String   @db.Text
+  tokensUsed Int      @default(0)
+  createdAt  DateTime @default(now())
 
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
 
 model Favorite {
@@ -429,8 +636,8 @@ model Favorite {
   userId    String
   createdAt DateTime @default(now())
 
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([projectId, userId])
 }
@@ -441,8 +648,8 @@ model RecentProject {
   userId    String
   viewedAt  DateTime @default(now())
 
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([projectId, userId])
 }
@@ -452,98 +659,98 @@ model RecentProject {
 // -----------------------------------------------------------------------------
 
 model WorkspaceInstance {
-  id             String    @id @default(uuid())
-  projectId      String
-  status         String    @default("STOPPED") // QUEUED, ALLOCATING_VM, PREPARING_FILESYSTEM, DOWNLOADING_BASE_IMAGE, INITIALIZING_RUNTIME, CLONING_REPOSITORY, SCANNING_REPOSITORY, DETECTING_FRAMEWORK, INSTALLING_DEPENDENCIES, GENERATING_AI_CONTEXT, BUILDING_PROJECT, RUNNING_HEALTH_CHECKS, STARTING_SERVICES, READY, STOPPED, FAILED
-  
+  id        String @id @default(uuid())
+  projectId String
+  status    String @default("STOPPED") // QUEUED, ALLOCATING_VM, PREPARING_FILESYSTEM, DOWNLOADING_BASE_IMAGE, INITIALIZING_RUNTIME, CLONING_REPOSITORY, SCANNING_REPOSITORY, DETECTING_FRAMEWORK, INSTALLING_DEPENDENCIES, GENERATING_AI_CONTEXT, BUILDING_PROJECT, RUNNING_HEALTH_CHECKS, STARTING_SERVICES, READY, STOPPED, FAILED
+
   framework      String?
   language       String?
   runtime        String?
   packageManager String?
-  
-  cpu            Float?    @default(2.0)
-  memory         Int?      @default(4096)
-  storage        Int?      @default(10240)
-  
-  nodeVersion    String?
-  dockerVersion  String?
-  
-  health         String?   @default("HEALTHY") // HEALTHY, UNHEALTHY, UNKNOWN
-  
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  deletedAt      DateTime?
 
-  project        Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  jobs           ProvisionJob[]
-  logs           WorkspaceLog[]
-  snapshots      WorkspaceSnapshot[]
-  environments   WorkspaceEnvironment[]
+  cpu     Float? @default(2.0)
+  memory  Int?   @default(4096)
+  storage Int?   @default(10240)
+
+  nodeVersion   String?
+  dockerVersion String?
+
+  health String? @default("HEALTHY") // HEALTHY, UNHEALTHY, UNKNOWN
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  project          Project                    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  jobs             ProvisionJob[]
+  logs             WorkspaceLog[]
+  snapshots        WorkspaceSnapshot[]
+  environments     WorkspaceEnvironment[]
   terminalSessions WorkspaceTerminalSession[]
 }
 
 model ProvisionJob {
-  id               String    @id @default(uuid())
-  workspaceId      String
-  projectId        String
-  status           String    @default("PENDING") // PENDING, RUNNING, SUCCESS, FAILED, CANCELLED
-  startedAt        DateTime?
-  finishedAt       DateTime?
-  duration         Int?      // milliseconds
-  currentStep      String?
-  retryCount       Int       @default(0)
-  error            String?   @db.Text
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  id          String    @id @default(uuid())
+  workspaceId String
+  projectId   String
+  status      String    @default("PENDING") // PENDING, RUNNING, SUCCESS, FAILED, CANCELLED
+  startedAt   DateTime?
+  finishedAt  DateTime?
+  duration    Int? // milliseconds
+  currentStep String?
+  retryCount  Int       @default(0)
+  error       String?   @db.Text
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-  workspace        WorkspaceInstance @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  project          Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  workspace WorkspaceInstance @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  project   Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
 model WorkspaceLog {
-  id               String    @id @default(uuid())
-  workspaceId      String
-  message          String    @db.Text
-  level            String    @default("INFO") // INFO, SUCCESS, WARNING, ERROR, DEBUG
-  timestamp        DateTime  @default(now())
-  metadata         Json?
+  id          String   @id @default(uuid())
+  workspaceId String
+  message     String   @db.Text
+  level       String   @default("INFO") // INFO, SUCCESS, WARNING, ERROR, DEBUG
+  timestamp   DateTime @default(now())
+  metadata    Json?
 
-  workspace        WorkspaceInstance @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspace WorkspaceInstance @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 }
 
 model WorkspaceSnapshot {
-  id               String    @id @default(uuid())
-  workspaceId      String
-  name             String
-  description      String?
-  storagePath      String
-  createdAt        DateTime  @default(now())
+  id          String   @id @default(uuid())
+  workspaceId String
+  name        String
+  description String?
+  storagePath String
+  createdAt   DateTime @default(now())
 
-  workspace        WorkspaceInstance @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspace WorkspaceInstance @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 }
 
 model WorkspaceEnvironment {
-  id               String    @id @default(uuid())
-  workspaceId      String
-  name             String
-  value            String
-  isSecret         Boolean   @default(false)
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  id          String   @id @default(uuid())
+  workspaceId String
+  name        String
+  value       String
+  isSecret    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  workspace        WorkspaceInstance @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspace WorkspaceInstance @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@unique([workspaceId, name])
 }
 
 model WorkspaceTerminalSession {
-  id               String    @id @default(uuid())
-  workspaceId      String
-  userId           String?
-  startedAt        DateTime  @default(now())
-  endedAt          DateTime?
-  status           String    @default("ACTIVE") // ACTIVE, CLOSED
+  id          String    @id @default(uuid())
+  workspaceId String
+  userId      String?
+  startedAt   DateTime  @default(now())
+  endedAt     DateTime?
+  status      String    @default("ACTIVE") // ACTIVE, CLOSED
 
-  workspace        WorkspaceInstance @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  user             User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+  workspace WorkspaceInstance @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
 }

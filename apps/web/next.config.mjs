@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  serverExternalPackages: ['node-pty', 'simple-git', '@prisma/client', '@codesync/database'],
   images: {
     remotePatterns: [
       {

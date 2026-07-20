@@ -5,7 +5,7 @@ import { prisma } from '@codesync/database';
 export async function POST(request: Request) {
   try {
     const { email, password, name } = await request.json();
-    const supabase = createClient();
+    const supabase = await createClient();
     
     const { data, error } = await supabase.auth.signUp({
       email,

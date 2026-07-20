@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { GitProvider, GitFileChange, GitCommit, GitBranch } from '@/lib/git/types';
-import { MockGitProvider } from '@/lib/git/providers/MockGitProvider';
+import { ServerGitProvider } from '@/lib/git/providers/ServerGitProvider';
 
 interface GitState {
   provider: GitProvider;
@@ -9,25 +9,25 @@ interface GitState {
   branches: GitBranch[];
   isRefreshing: boolean;
   
-  initialize: () => Promise<void>;
+  initialize: (projectId?: string) => Promise<void>;
   refresh: () => Promise<void>;
   stage: (paths: string[]) => Promise<void>;
   unstage: (paths: string[]) => Promise<void>;
   commit: (message: string) => Promise<void>;
 }
 
-const mockProvider = new MockGitProvider();
+const serverProvider = new ServerGitProvider();
 
 export const useGitStore = create<GitState>((set, get) => ({
-  provider: mockProvider,
+  provider: serverProvider,
   changes: [],
   commits: [],
   branches: [],
   isRefreshing: false,
 
-  initialize: async () => {
+  initialize: async (projectId?: string) => {
     const { provider, refresh } = get();
-    await provider.init();
+    await provider.init(projectId);
     await refresh();
   },
 

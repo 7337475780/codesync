@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 
 export async function GET(request: Request) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
@@ -29,7 +29,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
@@ -41,7 +41,8 @@ export async function POST(request: Request) {
     const project = await prisma.project.create({
       data: {
         name,
-        workspaceId,
+        slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        workspace: { connect: { id: workspaceId } },
         members: {
           create: {
             userId: user.id,

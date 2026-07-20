@@ -35,10 +35,12 @@ export default function ProjectsPage() {
           <h1 className="text-2xl font-bold text-white tracking-tight">Projects</h1>
           <p className="text-gray-400 text-sm">Manage and deploy your workspaces.</p>
         </div>
-        <Button className="bg-[#8b5cf6] hover:bg-[#7c3aed] text-white transition-all shadow-[0_0_15px_rgba(139,92,246,0.3)]">
-          <Plus className="w-4 h-4 mr-2" />
-          New Project
-        </Button>
+        <Link href="/dashboard/projects/new">
+          <Button className="bg-[#8b5cf6] hover:bg-[#7c3aed] text-white transition-all shadow-[0_0_15px_rgba(139,92,246,0.3)]">
+            <Plus className="w-4 h-4 mr-2" />
+            New Project
+          </Button>
+        </Link>
       </div>
 
       {/* Filters & Search */}
@@ -79,7 +81,7 @@ export default function ProjectsPage() {
       ) : projects.length > 0 ? (
         <div className={`grid gap-4 ${projectViewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
           {projects.map((project) => (
-            <Link href={`/dashboard/projects/${project.id}`} key={project.id}>
+            <Link href={`/dashboard/projects/${project.id}/editor`} key={project.id}>
               <div className="bg-[#0f0f0f] border border-white/5 rounded-2xl p-5 hover:border-white/10 hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/50 transition-all cursor-pointer group">
                 <div className="flex items-center gap-4 mb-6">
                   <div className="w-12 h-12 bg-gradient-to-br from-[#222] to-[#111] border border-white/5 rounded-xl flex items-center justify-center shrink-0">

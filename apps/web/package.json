@@ -36,6 +36,7 @@
     "monaco-editor": "^0.55.1",
     "nanoid": "^6.0.0",
     "next": "latest",
+    "node-pty": "^1.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.82.0",

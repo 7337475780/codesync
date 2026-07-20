@@ -1,0 +1,28 @@
+import { NextResponse } from 'next/server';
+import { getGitClient } from '@/lib/git/server-utils';
+
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const projectId = searchParams.get('projectId');
+    
+    if (!projectId) return NextResponse.json({ error: 'projectId is required' }, { status: 400 });
+
+    const git = getGitClient(projectId);
+    
+    const status = await git.status();
+    const isDetached = status.current?.includes('HEAD detached') || status.current === '';
+    const isDirty = !status.isClean();
+
+    return NextResponse.json({ 
+      success: true, 
+      health: {
+        isDetached,
+        isDirty,
+        conflicted: status.conflicted.length > 0
+      }
+    });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

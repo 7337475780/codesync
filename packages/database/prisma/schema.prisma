@@ -754,3 +754,57 @@ model WorkspaceTerminalSession {
   workspace WorkspaceInstance @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   user      User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
+
+// -----------------------------------------------------------------------------
+// VIRTUAL FILE SYSTEM
+// -----------------------------------------------------------------------------
+
+model FileSystemNode {
+  id          String   @id @default(uuid())
+  projectId   String
+  name        String
+  type        String   // "FILE" or "FOLDER"
+  parentId    String?
+  path        String
+  size        Int      @default(0)
+  mimeType    String?
+  contentUrl  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+  
+  parent      FileSystemNode?  @relation("NodeToNode", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  children    FileSystemNode[] @relation("NodeToNode")
+  
+  metadata    NodeMetadata?
+  permissions NodePermission[]
+
+  @@unique([projectId, parentId, name])
+  @@index([projectId, path])
+}
+
+model NodeMetadata {
+  id          String         @id @default(uuid())
+  nodeId      String         @unique
+  tags        String[]
+  description String?
+  customProps Json?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  node        FileSystemNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+}
+
+model NodePermission {
+  id          String         @id @default(uuid())
+  nodeId      String
+  userId      String?
+  roleId      String?
+  canRead     Boolean        @default(true)
+  canWrite    Boolean        @default(false)
+  canDelete   Boolean        @default(false)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  node        FileSystemNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+}

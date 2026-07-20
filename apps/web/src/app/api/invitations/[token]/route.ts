@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@codesync/database';
 
-export async function GET(req: Request, { params }: { params: { token: string } }) {
+export async function GET(req: Request, context: { params: Promise<{ token: string }> }) {
+  const { token } = await context.params;
   try {
     const invite = await prisma.organizationInvitation.findUnique({
-      where: { token: params.token },
+      where: { token: token },
       include: {
         organization: true,
         role: true
@@ -25,13 +26,14 @@ export async function GET(req: Request, { params }: { params: { token: string } 
   }
 }
 
-export async function POST(req: Request, { params }: { params: { token: string } }) {
+export async function POST(req: Request, context: { params: Promise<{ token: string }> }) {
+  const { token } = await context.params;
   try {
     const body = await req.json();
     const { userId } = body;
 
     const invite = await prisma.organizationInvitation.findUnique({
-      where: { token: params.token },
+      where: { token: token },
     });
 
     if (!invite || new Date() > invite.expiresAt || invite.status !== 'PENDING') {

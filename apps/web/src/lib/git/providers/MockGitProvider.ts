@@ -71,6 +71,27 @@ export class MockGitProvider implements GitProvider {
     return Promise.resolve();
   }
   
+  async clone(url: string, path: string, shallow?: boolean): Promise<void> { return Promise.resolve(); }
+  async push(): Promise<void> { return Promise.resolve(); }
+  async pull(): Promise<void> { return Promise.resolve(); }
+  async merge(branch: string): Promise<void> { return Promise.resolve(); }
+  async tags(): Promise<string[]> { return []; }
+  async diff(base?: string, head?: string): Promise<string> { return ''; }
+  async cherryPick(commitHash: string): Promise<void> { return Promise.resolve(); }
+  async stash(): Promise<void> { return Promise.resolve(); }
+  async rebase(branch: string): Promise<void> { return Promise.resolve(); }
+
+  async remotes(): Promise<any> { return []; }
+  async addRemote(name: string, url: string): Promise<void> { return Promise.resolve(); }
+  async removeRemote(name: string): Promise<void> { return Promise.resolve(); }
+  async blame(path: string): Promise<any> { return []; }
+  async conflicts(): Promise<string[]> { return []; }
+  async resolveConflict(file: string, resolution: 'current' | 'incoming'): Promise<void> { return Promise.resolve(); }
+  async repositoryInfo(): Promise<any> { return {}; }
+  async activity(): Promise<any> { return []; }
+  async aheadBehind(branch: string, remote?: string): Promise<{ahead: number, behind: number}> { return { ahead: 0, behind: 0 }; }
+  async health(): Promise<any> { return {}; }
+
   // Method just for mocking local edits from the UI
   mockEditFile(path: string) {
     const existing = this.files.find(f => f.path === path);

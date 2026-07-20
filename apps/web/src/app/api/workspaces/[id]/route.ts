@@ -2,9 +2,10 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@codesync/database';
 import { createClient } from '@/lib/supabase/server';
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params;
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
@@ -13,7 +14,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
     const workspace = await prisma.workspace.findUnique({
       where: {
-        id: params.id,
+        id: id,
         organization: {
           members: {
             some: {
@@ -37,9 +38,10 @@ export async function GET(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params;
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
@@ -50,7 +52,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
     const workspace = await prisma.workspace.findUnique({
       where: {
-        id: params.id,
+        id: id,
         organization: {
           members: {
             some: {
@@ -67,7 +69,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     }
 
     const updatedWorkspace = await prisma.workspace.update({
-      where: { id: params.id },
+      where: { id },
       data: updates
     });
 

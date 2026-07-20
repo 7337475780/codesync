@@ -1,0 +1,20 @@
+{
+  "name": "wss",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "ts-node src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "@hocuspocus/server": "^2.11.3",
+    "yjs": "^13.6.14"
+  },
+  "devDependencies": {
+    "@codesync/config": "workspace:*",
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.0.0"
+  }
+}

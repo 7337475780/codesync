@@ -22,10 +22,11 @@ export default function WorkspaceLayout({
   params,
 }: {
   children: React.ReactNode;
-  params: { projectId: string };
+  params: Promise<{ projectId: string }>;
 }) {
   const pathname = usePathname();
-  const basePath = `/dashboard/projects/${params.projectId}/workspace`;
+  const { projectId } = React.use(params);
+  const basePath = `/dashboard/projects/${projectId}/workspace`;
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-3.5rem)] bg-background">
@@ -33,7 +34,7 @@ export default function WorkspaceLayout({
       <div className="px-8 py-4 border-b border-border bg-card flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Workspace Console</h1>
-          <p className="text-sm text-muted-foreground mt-1">Project ID: {params.projectId}</p>
+          <p className="text-sm text-muted-foreground mt-1">Project ID: {projectId}</p>
         </div>
         <div className="flex items-center space-x-3">
           <Button variant="outline" size="sm">

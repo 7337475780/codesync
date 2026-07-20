@@ -2,9 +2,10 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@codesync/database';
 import { createClient } from '@/lib/supabase/server';
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params;
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
@@ -13,7 +14,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
     const project = await prisma.project.findUnique({
       where: {
-        id: params.id,
+        id: id,
         members: {
           some: {
             userId: user.id
@@ -40,9 +41,10 @@ export async function GET(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params;
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
@@ -54,7 +56,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     // Verify access
     const project = await prisma.project.findUnique({
       where: {
-        id: params.id,
+        id: id,
         members: { some: { userId: user.id, role: { in: ['OWNER', 'ADMIN'] } } }
       }
     });
@@ -64,7 +66,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     }
 
     const updatedProject = await prisma.project.update({
-      where: { id: params.id },
+      where: { id },
       data: updates
     });
 
@@ -74,9 +76,10 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params;
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
@@ -86,7 +89,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     // Verify access
     const project = await prisma.project.findUnique({
       where: {
-        id: params.id,
+        id: id,
         members: { some: { userId: user.id, role: 'OWNER' } }
       }
     });
@@ -96,7 +99,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     }
 
     await prisma.project.delete({
-      where: { id: params.id }
+      where: { id }
     });
 
     return NextResponse.json({ success: true });

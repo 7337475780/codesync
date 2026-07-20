@@ -19,7 +19,9 @@ export class ServerTerminalProvider {
     
     const contentType = res.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
-      throw new Error('API did not return JSON. The server might be compiling or encountered an error.');
+      const text = await res.text();
+      console.error(`Terminal API Error (Status ${res.status}):\n${text.substring(0, 1000)}`);
+      throw new Error(`API returned HTTP ${res.status} (Not JSON). Check console for HTML body or error details.`);
     }
     
     const data = await res.json();
@@ -32,6 +34,7 @@ export class ServerTerminalProvider {
       }
       this.startPolling();
     } else {
+      console.error(`Terminal API JSON Error (Status ${res.status}):`, data);
       throw new Error(data.error || 'Failed to create terminal');
     }
   }

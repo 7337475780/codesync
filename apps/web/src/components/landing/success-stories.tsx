@@ -61,7 +61,7 @@ export function SuccessStories() {
       {/* Background glow effects */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[600px] rounded-[100%] bg-[#8b5cf6]/5 blur-[120px] mix-blend-screen"></div>
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay"></div>
+
       </div>
 
       <Container className="mx-auto w-full max-w-[1200px] px-6 relative z-10">

@@ -20,8 +20,8 @@ interface TerminalTabsState {
 let nextTerminalId = 1;
 
 export const useTerminalTabsStore = create<TerminalTabsState>((set) => ({
-  tabs: [{ id: 'term-1', title: 'bash' }],
-  activeTabId: 'term-1',
+  tabs: [],
+  activeTabId: null,
 
   addTab: (tab) => set((state) => {
     nextTerminalId++;

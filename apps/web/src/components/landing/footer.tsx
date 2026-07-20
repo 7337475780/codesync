@@ -53,7 +53,7 @@ export function Footer() {
       {/* Background Effects */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-[100%] bg-[#3b82f6]/5 blur-[120px] mix-blend-screen"></div>
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay"></div>
+
       </div>
 
       <Container className="mx-auto w-full max-w-[1200px] px-6 pt-24 pb-12 relative z-10">
@@ -106,25 +106,24 @@ export function Footer() {
                 <h4 className="hidden sm:block text-white font-bold text-[15px] mb-6">{section.title}</h4>
                 
                 {/* Links Container */}
-                <AnimatePresence initial={false}>
-                  {(openSections[section.title] || typeof window !== 'undefined' && window.innerWidth >= 640) && (
-                    <motion.ul 
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      className="flex flex-col gap-3 overflow-hidden sm:!h-auto sm:!opacity-100 mt-2 sm:mt-0"
-                    >
-                      {section.links.map(link => (
-                        <li key={link}>
-                          <a href="#" className="text-[14px] text-gray-400 hover:text-[#a78bfa] transition-colors relative group inline-block">
-                            {link}
-                            <span className="absolute left-0 bottom-0 w-0 h-[1px] bg-[#a78bfa] transition-all duration-300 group-hover:w-full opacity-50"></span>
-                          </a>
-                        </li>
-                      ))}
-                    </motion.ul>
-                  )}
-                </AnimatePresence>
+                <motion.ul 
+                  initial={false}
+                  animate={openSections[section.title] ? "open" : "closed"}
+                  variants={{
+                    open: { height: 'auto', opacity: 1, display: 'flex' },
+                    closed: { height: 0, opacity: 0, transitionEnd: { display: 'none' } }
+                  }}
+                  className="flex-col gap-3 overflow-hidden sm:!h-auto sm:!opacity-100 sm:!flex mt-2 sm:mt-0"
+                >
+                  {section.links.map(link => (
+                    <li key={link}>
+                      <a href="#" className="text-[14px] text-gray-400 hover:text-[#a78bfa] transition-colors relative group inline-block">
+                        {link}
+                        <span className="absolute left-0 bottom-0 w-0 h-[1px] bg-[#a78bfa] transition-all duration-300 group-hover:w-full opacity-50"></span>
+                      </a>
+                    </li>
+                  ))}
+                </motion.ul>
               </div>
             ))}
           </div>

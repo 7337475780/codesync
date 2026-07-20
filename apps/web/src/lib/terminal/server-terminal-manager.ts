@@ -1,8 +1,9 @@
-import * as pty from 'node-pty';
 import os from 'os';
+import fs from 'fs';
+import path from 'path';
 
 export interface TerminalSession {
-  ptyProcess: pty.IPty;
+  ptyProcess: any;
   outputBuffer: string;
   cwd: string;
   command: string;
@@ -13,10 +14,10 @@ class ServerTerminalManager {
   private terminals = new Map<string, TerminalSession>();
 
   private getDefaultShell(): string {
-    if (os.platform() === 'win32') {
-      return 'cmd.exe';
+    if (os.platform() === "win32") {
+      return process.env.ComSpec || "C:\\Windows\\System32\\cmd.exe";
     }
-    return process.env.SHELL || 'bash';
+    return process.env.SHELL || "/bin/bash";
   }
 
   createTerminal(id: string, cwd: string = process.cwd(), cols: number = 80, rows: number = 24): void {
@@ -24,27 +25,80 @@ class ServerTerminalManager {
       this.killTerminal(id);
     }
 
+    let workingDir = path.resolve(cwd);
+
+    if (!fs.existsSync(workingDir)) {
+      try {
+        fs.mkdirSync(workingDir, { recursive: true });
+      } catch (e) {
+        console.error("Failed to create working directory:", e);
+      }
+    }
+
+    if (!fs.existsSync(workingDir)) {
+      throw new Error(`Working directory does not exist: ${workingDir}`);
+    }
+
     const shell = this.getDefaultShell();
     const args = shell.includes('powershell') ? ['-NoLogo'] : [];
 
-    const ptyProcess = pty.spawn(shell, args, {
-      name: 'xterm-color',
-      cols: cols || 80,
-      rows: rows || 24,
-      cwd: cwd,
-      env: process.env as any,
-      useConpty: true
+    let pty;
+    try {
+      pty = require('node-pty');
+    } catch (e) {
+      console.warn('node-pty not available, using mock fallback', e);
+      pty = {
+        spawn: () => ({
+          onData: (cb: any) => { 
+            setTimeout(() => cb('\x1b[31mTerminal unavailable: node-pty native module not built.\x1b[0m\r\n'), 100); 
+          },
+          onExit: (cb: any) => {},
+          write: () => {},
+          resize: () => {},
+          kill: () => {},
+        })
+      };
+    }
+
+    const spawnEnv = process.env as any;
+
+    console.log({
+      shell,
+      cwd: workingDir,
+      exists: fs.existsSync(workingDir),
+      cols,
+      rows,
     });
+
+    let ptyProcess;
+    try {
+      ptyProcess = pty.spawn(shell, args, {
+        name: 'xterm-256color',
+        cols: cols || 80,
+        rows: rows || 24,
+        cwd: workingDir,
+        env: spawnEnv,
+        useConpty: true
+      });
+    } catch (err) {
+      console.error("PTY Spawn Failed", {
+        shell,
+        cwd: workingDir,
+        exists: fs.existsSync(workingDir),
+        error: err,
+      });
+      throw err;
+    }
 
     const session: TerminalSession = {
       ptyProcess,
       outputBuffer: '',
-      cwd,
+      cwd: workingDir,
       command: shell,
       args: []
     };
 
-    ptyProcess.onData((data) => {
+    ptyProcess.onData((data: string) => {
       session.outputBuffer += data;
     });
 

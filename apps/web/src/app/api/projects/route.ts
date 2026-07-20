@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@codesync/database';
 import { createClient } from '@/lib/supabase/server';
+import fs from 'fs';
+import path from 'path';
+import { getRepoPath } from '@/lib/git/git-path-utils';
+import simpleGit from 'simple-git';
 
 export async function GET(request: Request) {
   try {
@@ -38,6 +42,15 @@ export async function POST(request: Request) {
 
     const { name, workspaceId } = await request.json();
 
+    // Check if the organization/workspace exists
+    const orgWorkspace = await prisma.workspace.findUnique({
+      where: { id: workspaceId }
+    });
+    
+    if (!orgWorkspace) {
+      return NextResponse.json({ error: 'Workspace not found' }, { status: 404 });
+    }
+
     const project = await prisma.project.create({
       data: {
         name,
@@ -49,6 +62,32 @@ export async function POST(request: Request) {
             role: 'OWNER'
           }
         }
+      }
+    });
+
+    // Automatically Create Workspace folder and provision
+    const repoPath = getRepoPath(project.id);
+    if (!fs.existsSync(repoPath)) {
+      fs.mkdirSync(repoPath, { recursive: true });
+    }
+
+    const git = simpleGit(repoPath);
+    await git.init();
+
+    const defaultReadme = `# ${name}\n\nProject automatically provisioned.\n`;
+    fs.writeFileSync(path.join(repoPath, 'README.md'), defaultReadme);
+    
+    const defaultGitignore = `node_modules\n.env\n.env.local\n.next\nbuild\ndist\n`;
+    fs.writeFileSync(path.join(repoPath, '.gitignore'), defaultGitignore);
+
+    await git.add(['README.md', '.gitignore']);
+    await git.commit('Initial commit');
+
+    // Create WorkspaceInstance to link project with backend
+    await prisma.workspaceInstance.create({
+      data: {
+        projectId: project.id,
+        status: 'RUNNING'
       }
     });
 

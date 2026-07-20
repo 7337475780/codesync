@@ -61,7 +61,7 @@ export function CollaborationShowcase() {
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-[#3b82f6]/10 blur-[120px] mix-blend-screen"></div>
         {/* Subtle grid background */}
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay"></div>
+
       </div>
 
       <Container className="mx-auto w-full max-w-[1200px] px-6 relative z-10">

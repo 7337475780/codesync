@@ -6,10 +6,14 @@ import { Lock, Plus, Trash2, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@codesync/ui/components/ui/button';
 
 export default function DeploymentsEnvironmentPage() {
-  const { envVars, addEnvVar, removeEnvVar } = useDeploymentStore();
+  const { envVars, addEnvVar, removeEnvVar, fetchEnvironments } = useDeploymentStore();
   const [newKey, setNewKey] = useState('');
   const [newValue, setNewValue] = useState('');
   const [showValues, setShowValues] = useState<Record<string, boolean>>({});
+
+  React.useEffect(() => {
+    fetchEnvironments();
+  }, [fetchEnvironments]);
 
   const handleAdd = () => {
     if (!newKey.trim() || !newValue.trim()) return;

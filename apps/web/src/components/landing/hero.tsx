@@ -28,7 +28,7 @@ export function Hero() {
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_0%,#000_70%,transparent_100%)]"></div>
         
         {/* Noise Overlay */}
-        <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
+
         
         {/* Mesh Gradients / Glows */}
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[50%] rounded-full bg-[#4f46e5]/20 blur-[120px] mix-blend-screen"></div>

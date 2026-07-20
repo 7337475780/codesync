@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getGitClient } from '@/lib/git/server-utils';
+import { getGitClient } from '@/lib/git/git-path-utils';
 
 export async function GET(request: Request) {
   try {
@@ -9,7 +9,7 @@ export async function GET(request: Request) {
     
     if (!projectId || !path) return NextResponse.json({ error: 'projectId and path are required' }, { status: 400 });
 
-    const git = getGitClient(projectId);
+    const git = await getGitClient(projectId);
     const blameStr = await git.raw(['blame', '--line-porcelain', path]);
 
     // Very basic parsing for git blame --line-porcelain

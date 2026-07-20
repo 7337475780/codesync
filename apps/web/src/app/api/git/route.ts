@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getGitClient, recordGitActivity } from '@/lib/git/server-utils';
+import { getGitClient } from '@/lib/git/git-path-utils';
+import { recordGitActivity } from '@/lib/git/git-activity';
 
 export async function POST(request: Request) {
   try {
@@ -9,7 +10,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'projectId and action are required' }, { status: 400 });
     }
 
-    const git = getGitClient(projectId);
+    const git = await getGitClient(projectId);
     let result: any = { success: true };
 
     switch (action) {

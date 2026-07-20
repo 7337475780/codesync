@@ -76,7 +76,7 @@ export function TemplatesShowcase() {
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 right-1/4 w-[600px] h-[600px] rounded-full bg-[#8b5cf6]/10 blur-[150px] mix-blend-screen"></div>
         <div className="absolute bottom-0 left-1/4 w-[600px] h-[600px] rounded-full bg-[#3b82f6]/10 blur-[150px] mix-blend-screen"></div>
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay"></div>
+
       </div>
 
       <Container className="mx-auto w-full max-w-[1200px] px-6 relative z-10">
@@ -185,8 +185,7 @@ export function TemplatesShowcase() {
             </div>
 
             {/* Preview Content */}
-            <div className="flex-1 p-6 flex flex-col relative overflow-hidden bg-[url('https://grainy-gradients.vercel.app/noise.svg')] bg-cover bg-center">
-              
+            <div className="flex-1 p-6 flex flex-col relative overflow-hidden bg-cover bg-center">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeTemplate.id}

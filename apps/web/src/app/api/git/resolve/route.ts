@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
-import { getGitClient, recordGitActivity } from '@/lib/git/server-utils';
+import { getGitClient } from '@/lib/git/git-path-utils';
+import { recordGitActivity } from '@/lib/git/git-activity';
 
 export async function POST(request: Request) {
   try {
     const { projectId, file, resolution } = await request.json();
     if (!projectId || !file || !resolution) return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
 
-    const git = getGitClient(projectId);
+    const git = await getGitClient(projectId);
     
     if (resolution === 'current') {
       await git.checkout(['--ours', file]);

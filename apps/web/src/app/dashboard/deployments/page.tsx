@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useDeploymentStore } from '@/store/deployment-store';
 import { DeploymentCard } from '@/components/deployments/deployment-card';
 import { AnalyticsCards } from '@/components/deployments/analytics-cards';
@@ -9,8 +9,12 @@ import { Button } from '@codesync/ui/components/ui/button';
 import Link from 'next/link';
 
 export default function DeploymentsOverviewPage() {
-  const { deployments } = useDeploymentStore();
+  const { deployments, fetchDeployments } = useDeploymentStore();
   
+  useEffect(() => {
+    fetchDeployments();
+  }, [fetchDeployments]);
+
   const productionDeployments = deployments.filter(d => d.environment === 'Production');
   const previewDeployments = deployments.filter(d => d.environment === 'Preview');
   

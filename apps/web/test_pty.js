@@ -1,7 +1,27 @@
+const pty = require('node-pty');
+const fs = require('fs');
+const path = require('path');
+
+const shell = process.env.ComSpec || "C:\\Windows\\System32\\cmd.exe";
+const workingDir = path.resolve("C:\\Users\\tharu\\codesync\\apps\\web\\.repos\\term-1");
+
+console.log("Testing node-pty with:");
+console.log("Shell:", shell);
+console.log("CWD:", workingDir);
+console.log("CWD exists?", fs.existsSync(workingDir));
+
 try {
-  console.log('Requiring node-pty...');
-  const pty = require('node-pty');
-  console.log('Successfully loaded node-pty!');
-} catch (err) {
-  console.error('Failed to load node-pty:', err);
+  const ptyProcess = pty.spawn(shell, [], {
+    name: 'xterm-256color',
+    cols: 80,
+    rows: 24,
+    cwd: workingDir,
+    env: process.env,
+    useConpty: true
+  });
+  console.log("SUCCESS!");
+  ptyProcess.kill();
+} catch (e) {
+  console.error("FAILED with error:");
+  console.error(e);
 }

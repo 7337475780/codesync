@@ -9,9 +9,10 @@ import 'xterm/css/xterm.css';
 
 interface TerminalProps {
   id: string;
+  projectId: string;
 }
 
-export function Terminal({ id }: TerminalProps) {
+export function Terminal({ id, projectId }: TerminalProps) {
   const terminalRef = useRef<HTMLDivElement>(null);
   const xtermRef = useRef<XTerm | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
@@ -49,7 +50,7 @@ export function Terminal({ id }: TerminalProps) {
       console.warn("WebGL addon failed to load, falling back to canvas", e);
     }
 
-    const provider = new ServerTerminalProvider(id);
+    const provider = new ServerTerminalProvider(projectId);
     providerRef.current = provider;
 
     provider.onData((data) => {

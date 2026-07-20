@@ -105,7 +105,7 @@ export function Pricing() {
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 right-1/4 w-[600px] h-[600px] rounded-full bg-[#8b5cf6]/10 blur-[150px] mix-blend-screen"></div>
         <div className="absolute bottom-1/4 left-1/4 w-[600px] h-[600px] rounded-full bg-[#4f46e5]/10 blur-[150px] mix-blend-screen"></div>
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay"></div>
+
       </div>
 
       <Container className="mx-auto w-full max-w-[1200px] px-4 md:px-6 relative z-10">

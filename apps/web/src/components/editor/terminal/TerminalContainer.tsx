@@ -8,13 +8,25 @@ const Terminal = dynamic(
   { ssr: false }
 );
 
+import { useParams } from 'next/navigation';
+import { Plus } from 'lucide-react';
+
 export function TerminalContainer() {
-  const { tabs, activeTabId } = useTerminalTabsStore();
+  const { tabs, activeTabId, addTab } = useTerminalTabsStore();
+  const params = useParams();
+  const projectId = params.projectId as string;
   
   if (tabs.length === 0) {
     return (
-      <div className="flex-1 flex items-center justify-center text-gray-500 font-mono text-sm bg-[#141414]">
-        No open terminals. Click + to create one.
+      <div className="flex-1 flex flex-col items-center justify-center text-gray-500 font-mono text-sm bg-[#141414] gap-3">
+        <span>No open terminals.</span>
+        <button 
+          onClick={() => addTab()}
+          className="flex items-center gap-2 px-4 py-2 bg-[#007acc] hover:bg-[#006bb3] text-white rounded-md transition-colors shadow-sm"
+        >
+          <Plus className="w-4 h-4" />
+          New Terminal
+        </button>
       </div>
     );
   }
@@ -32,7 +44,7 @@ export function TerminalContainer() {
           }}
         >
           {/* We keep all terminal instances mounted so they don't lose state/history, but hide inactive ones */}
-          <Terminal id={tab.id} />
+          <Terminal id={tab.id} projectId={projectId} />
         </div>
       ))}
     </div>

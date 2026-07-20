@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@codesync/database';
 import { createClient } from '@/lib/supabase/server';
+import fs from 'fs';
+import { getRepoPath } from '@/lib/git/git-path-utils';
+import simpleGit from 'simple-git';
 
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
@@ -33,6 +36,18 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
 
     if (!project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
+    }
+
+    // Auto-provisioning check on GET
+    try {
+      const repoPath = getRepoPath(project.id);
+      if (!fs.existsSync(repoPath)) {
+        fs.mkdirSync(repoPath, { recursive: true });
+        const git = simpleGit(repoPath);
+        await git.init();
+      }
+    } catch (e) {
+      console.error(`Failed to auto-provision workspace for project ${project.id}:`, e);
     }
 
     return NextResponse.json({ project });

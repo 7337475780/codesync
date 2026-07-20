@@ -4,7 +4,12 @@ import { prisma } from '@codesync/database';
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
-    const userId = url.searchParams.get('userId') || 'mock-user-id';
+    let userId = url.searchParams.get('userId');
+    if (!userId || userId === 'mock-user-id') {
+      const user = await prisma.user.findFirst();
+      if (!user) return NextResponse.json([]);
+      userId = user.id;
+    }
     const status = url.searchParams.get('status');
     const category = url.searchParams.get('category');
     const limit = parseInt(url.searchParams.get('limit') || '50', 10);

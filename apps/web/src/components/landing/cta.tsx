@@ -91,7 +91,7 @@ export function CTA() {
         {/* Background Effects */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 right-1/3 w-[800px] h-[800px] rounded-full bg-[#8b5cf6]/5 blur-[150px] mix-blend-screen"></div>
-          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay"></div>
+
         </div>
 
         <Container className="mx-auto w-full max-w-[800px] px-6 relative z-10">
@@ -157,9 +157,9 @@ export function CTA() {
           <div className="absolute top-[40%] right-[30%] w-20 h-20 bg-blue-500/20 blur-[30px] rounded-full"></div>
           
           {/* Grid lines */}
-          <div className="absolute inset-0 bg-[url('https://res.cloudinary.com/dzl9yxixg/image/upload/v1714558603/grid_vncjwg.svg')] opacity-[0.05] bg-center [mask-image:linear-gradient(to_bottom,transparent,black_10%,black_90%,transparent)]"></div>
+
           
-          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.04] mix-blend-overlay"></div>
+
         </div>
 
         <Container className="mx-auto w-full max-w-[1000px] px-6 relative z-10">

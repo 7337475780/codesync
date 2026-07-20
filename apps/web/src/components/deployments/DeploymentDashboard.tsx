@@ -9,20 +9,21 @@ import { EnvironmentManager } from './EnvironmentManager';
 import { TrafficAnalytics } from './TrafficAnalytics';
 import { DeploymentLogs } from './DeploymentLogs';
 
-const provider = new MockDeploymentProvider();
-
 export function DeploymentDashboard({ projectId }: { projectId: string }) {
-  const { currentDeployment, setCurrentDeployment, deployments, setDeployments } = useDeploymentStore();
+  const { currentDeployment, setCurrentDeployment, deployments, fetchDeployments } = useDeploymentStore();
   const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
-    // Initial fetch of deployments
-    // For now we just use the mock provider to create one
-    provider.deploy(projectId, {}).then(deployment => {
-      setDeployments([deployment]);
-      setCurrentDeployment(deployment);
-    });
-  }, [projectId, setDeployments, setCurrentDeployment]);
+    if (projectId) {
+      fetchDeployments(projectId);
+    }
+  }, [projectId, fetchDeployments]);
+
+  useEffect(() => {
+    if (deployments.length > 0 && !currentDeployment) {
+      setCurrentDeployment(deployments[0]);
+    }
+  }, [deployments, currentDeployment, setCurrentDeployment]);
 
   if (!currentDeployment) {
     return <div className="p-8 text-center animate-pulse">Loading deployment data...</div>;

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getGitClient, getRepoPath, recordGitActivity } from '@/lib/git/server-utils';
+import { getGitClient, getRepoPath } from '@/lib/git/git-path-utils';
+import { recordGitActivity } from '@/lib/git/git-activity';
 import simpleGit from 'simple-git';
 
 export async function POST(request: Request) {

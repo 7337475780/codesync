@@ -14,7 +14,7 @@ interface TerminalSession {
 
 const MOCK_SESSIONS: TerminalSession[] = [
   {
-    id: 'term-1',
+    id: 'mock-1',
     name: 'Build Process',
     status: 'running',
     command: 'npm run build',
@@ -32,7 +32,7 @@ const MOCK_SESSIONS: TerminalSession[] = [
     ]
   },
   {
-    id: 'term-2',
+    id: 'mock-2',
     name: 'Development Server',
     status: 'stopped',
     command: 'npm run dev',

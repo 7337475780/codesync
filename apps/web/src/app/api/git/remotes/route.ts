@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getGitClient, recordGitActivity } from '@/lib/git/server-utils';
+import { getGitClient } from '@/lib/git/git-path-utils';
+import { recordGitActivity } from '@/lib/git/git-activity';
 
 export async function GET(request: Request) {
   try {
@@ -8,7 +9,7 @@ export async function GET(request: Request) {
     
     if (!projectId) return NextResponse.json({ error: 'projectId is required' }, { status: 400 });
 
-    const git = getGitClient(projectId);
+    const git = await getGitClient(projectId);
     const remotes = await git.getRemotes(true);
 
     return NextResponse.json({ success: true, remotes });
@@ -22,7 +23,7 @@ export async function POST(request: Request) {
     const { projectId, name, url } = await request.json();
     if (!projectId || !name || !url) return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
 
-    const git = getGitClient(projectId);
+    const git = await getGitClient(projectId);
     await git.addRemote(name, url);
     await recordGitActivity(projectId, 'add_remote', { name, url });
 
@@ -37,7 +38,7 @@ export async function DELETE(request: Request) {
     const { projectId, name } = await request.json();
     if (!projectId || !name) return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
 
-    const git = getGitClient(projectId);
+    const git = await getGitClient(projectId);
     await git.removeRemote(name);
     await recordGitActivity(projectId, 'remove_remote', { name });
 

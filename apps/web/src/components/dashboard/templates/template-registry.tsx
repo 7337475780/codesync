@@ -3,38 +3,14 @@ import { useTemplateStore } from '@/store/template-store';
 import { Button } from '@codesync/ui/components/ui/button';
 import { TemplateSkeleton } from '../skeletons';
 
-const MOCK_TEMPLATES = [
-  {
-    id: 't1',
-    name: 'SaaS Starter Kit',
-    description: 'Complete boilerplate with Next.js, Supabase, Stripe, and Tailwind.',
-    category: 'Full Stack',
-    framework: 'Next.js',
-    difficulty: 'Intermediate',
-    isAiOptimized: true,
-  },
-  {
-    id: 't2',
-    name: 'E-commerce Storefront',
-    description: 'High-performance storefront built with Shopify Storefront API and Remix.',
-    category: 'E-commerce',
-    framework: 'Remix',
-    difficulty: 'Advanced',
-    isAiOptimized: false,
-  },
-  {
-    id: 't3',
-    name: 'Documentation Site',
-    description: 'Beautiful docs powered by Nextra and MDX.',
-    category: 'Documentation',
-    framework: 'Next.js',
-    difficulty: 'Beginner',
-    isAiOptimized: true,
-  }
-];
+
 
 export const TemplateRegistry = () => {
-  const { isLoading, selectedTemplateId, setSelectedTemplate } = useTemplateStore();
+  const { templates, isLoading, selectedTemplateId, setSelectedTemplate, fetchTemplates } = useTemplateStore();
+
+  React.useEffect(() => {
+    fetchTemplates();
+  }, [fetchTemplates]);
 
   if (isLoading) {
     return <TemplateSkeleton />;
@@ -52,13 +28,13 @@ export const TemplateRegistry = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {MOCK_TEMPLATES.map((template) => (
+        {templates.map((template) => (
           <div 
             key={template.id} 
             className={`border rounded-xl p-5 cursor-pointer transition-all hover:shadow-md ${
               selectedTemplateId === template.id ? 'border-primary ring-1 ring-primary' : 'border-border'
             }`}
-            onClick={() => setSelectedTemplate(template.id)}
+            onClick={() => setSelectedTemplate(template.id as string)}
           >
             <div className="flex justify-between items-start mb-3">
               <h3 className="font-semibold text-lg">{template.name}</h3>

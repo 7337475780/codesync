@@ -3,11 +3,12 @@ import { prisma } from '@codesync/database';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const domains = await prisma.projectDomain.findMany({
-      where: { projectId: params.id },
+      where: { projectId: id },
       orderBy: { createdAt: 'desc' }
     });
 
@@ -20,13 +21,14 @@ export async function GET(
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const data = await request.json();
     const domain = await prisma.projectDomain.create({
       data: {
-        projectId: params.id,
+        projectId: id,
         name: data.name,
         type: data.type || 'Primary',
         target: data.target || null,

@@ -3,14 +3,15 @@ import { prisma } from '@codesync/database';
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const { action } = await request.json();
 
     if (action === 'cancel') {
       const deployment = await prisma.deployment.update({
-        where: { id: params.id },
+        where: { id },
         data: { status: 'CANCELED' }
       });
       return NextResponse.json({ success: true, deployment });
@@ -25,14 +26,15 @@ export async function PATCH(
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const { action } = await request.json();
 
     if (action === 'redeploy') {
       const existing = await prisma.deployment.findUnique({
-        where: { id: params.id }
+        where: { id }
       });
 
       if (!existing) {

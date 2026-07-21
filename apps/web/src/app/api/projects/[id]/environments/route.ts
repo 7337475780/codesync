@@ -3,11 +3,12 @@ import { prisma } from '@codesync/database';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const environments = await prisma.environmentVariable.findMany({
-      where: { projectId: params.id },
+      where: { projectId: id },
       orderBy: { name: 'asc' }
     });
 
@@ -20,13 +21,14 @@ export async function GET(
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const data = await request.json();
     const envVar = await prisma.environmentVariable.create({
       data: {
-        projectId: params.id,
+        projectId: id,
         name: data.key,
         value: data.value,
         environment: data.environments?.[0] || 'development',

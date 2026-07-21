@@ -3,11 +3,12 @@ import { prisma } from '@codesync/database';
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string; envId: string } }
+  { params }: { params: Promise<{ id: string; envId: string }> }
 ) {
   try {
+    const { envId } = await params;
     await prisma.environmentVariable.delete({
-      where: { id: params.envId }
+      where: { id: envId }
     });
 
     return NextResponse.json({ success: true });

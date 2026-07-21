@@ -13,6 +13,7 @@ interface DeploymentState {
   setCurrentDeployment: (deployment: Deployment | null) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
+  fetchDeployments: (projectId: string) => void;
 }
 
 export const useDeploymentStore = create<DeploymentState>((set) => ({
@@ -30,4 +31,5 @@ export const useDeploymentStore = create<DeploymentState>((set) => ({
   setCurrentDeployment: (currentDeployment) => set({ currentDeployment }),
   setLoading: (isLoading) => set({ isLoading }),
   setError: (error) => set({ error }),
+  fetchDeployments: (projectId) => {},
 }));

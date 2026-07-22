@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { Repository } from '@/lib/github/types';
-import { mockGitProvider } from '@/lib/github/mock-provider';
 
 interface RepositoryState {
   repositories: Repository[];
@@ -21,7 +20,10 @@ export const useRepositoryStore = create<RepositoryState>((set) => ({
   fetchRepositories: async (org) => {
     set({ isLoading: true, error: null });
     try {
-      const repos = await mockGitProvider.getRepositories(org);
+      const url = org ? `/api/repositories?org=${org}` : '/api/repositories';
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Failed to fetch repositories');
+      const repos = await res.json();
       set({ repositories: repos, isLoading: false });
     } catch (err: any) {
       set({ error: err.message, isLoading: false });
@@ -31,7 +33,11 @@ export const useRepositoryStore = create<RepositoryState>((set) => ({
   fetchRepository: async (fullName) => {
     set({ isLoading: true, error: null });
     try {
-      const repo = await mockGitProvider.getRepository(fullName);
+      const res = await fetch(`/api/repositories?fullName=${fullName}`);
+      if (!res.ok) throw new Error('Failed to fetch repository');
+      const repos = await res.json();
+      const repo = repos[0];
+      if (!repo) throw new Error('Repository not found');
       set({ currentRepository: repo, isLoading: false });
     } catch (err: any) {
       set({ error: err.message, isLoading: false });

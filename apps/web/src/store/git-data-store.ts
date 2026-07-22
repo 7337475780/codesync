@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { Branch, Commit, PullRequest, Contributor } from '@/lib/github/types';
-import { mockGitProvider } from '@/lib/github/mock-provider';
 
 interface GitDataState {
   branches: Branch[];
@@ -37,7 +36,9 @@ export const useGitDataStore = create<GitDataState>((set) => ({
   fetchBranches: async (fullName) => {
     set({ isLoadingBranches: true, error: null });
     try {
-      const branches = await mockGitProvider.getBranches(fullName);
+      const res = await fetch(`/api/github/branches?fullName=${fullName}`);
+      if (!res.ok) throw new Error('Failed to fetch branches');
+      const branches = await res.json();
       set({ branches, isLoadingBranches: false });
     } catch (err: any) {
       set({ error: err.message, isLoadingBranches: false });
@@ -47,7 +48,12 @@ export const useGitDataStore = create<GitDataState>((set) => ({
   fetchCommits: async (fullName, branch) => {
     set({ isLoadingCommits: true, error: null });
     try {
-      const commits = await mockGitProvider.getCommits(fullName, branch);
+      const url = branch 
+        ? `/api/github/commits?fullName=${fullName}&branch=${branch}`
+        : `/api/github/commits?fullName=${fullName}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Failed to fetch commits');
+      const commits = await res.json();
       set({ commits, isLoadingCommits: false });
     } catch (err: any) {
       set({ error: err.message, isLoadingCommits: false });
@@ -57,7 +63,9 @@ export const useGitDataStore = create<GitDataState>((set) => ({
   fetchPullRequests: async (fullName) => {
     set({ isLoadingPullRequests: true, error: null });
     try {
-      const prs = await mockGitProvider.getPullRequests(fullName);
+      const res = await fetch(`/api/github/pulls?fullName=${fullName}`);
+      if (!res.ok) throw new Error('Failed to fetch pull requests');
+      const prs = await res.json();
       set({ pullRequests: prs, isLoadingPullRequests: false });
     } catch (err: any) {
       set({ error: err.message, isLoadingPullRequests: false });
@@ -67,7 +75,9 @@ export const useGitDataStore = create<GitDataState>((set) => ({
   fetchContributors: async (fullName) => {
     set({ isLoadingContributors: true, error: null });
     try {
-      const contributors = await mockGitProvider.getContributors(fullName);
+      const res = await fetch(`/api/github/contributors?fullName=${fullName}`);
+      if (!res.ok) throw new Error('Failed to fetch contributors');
+      const contributors = await res.json();
       set({ contributors, isLoadingContributors: false });
     } catch (err: any) {
       set({ error: err.message, isLoadingContributors: false });

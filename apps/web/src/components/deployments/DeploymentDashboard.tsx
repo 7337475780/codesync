@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useDeploymentStore } from '../../stores/deployment-store';
-import { MockDeploymentProvider } from '../../providers/MockDeploymentProvider';
 import { DeploymentStatusBadge } from './DeploymentStatusBadge';
 import { DeploymentCard } from './DeploymentCard';
 import { BuildPipeline } from './BuildPipeline';

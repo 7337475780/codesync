@@ -3,7 +3,7 @@ import { useRuntimeStore } from '@/store/runtime-store';
 import { useProcessStore } from '@/store/process-store';
 import { usePortsStore } from '@/store/ports-store';
 import { useTasksStore } from '@/store/tasks-store';
-import { MockRuntimeProvider } from '@/lib/runtime/providers/MockRuntimeProvider';
+import { ServerRuntimeProvider } from '@/lib/runtime/providers/ServerRuntimeProvider';
 
 export function RuntimeManager() {
   const { provider, setProvider, setInfo, addMetrics } = useRuntimeStore();
@@ -14,15 +14,15 @@ export function RuntimeManager() {
   useEffect(() => {
     if (provider) return;
 
-    const mock = new MockRuntimeProvider();
-    setProvider(mock);
+    const serverProvider = new ServerRuntimeProvider('default');
+    setProvider(serverProvider);
 
-    mock.getInfo().then(setInfo);
-    mock.listProcesses().then(setProcesses);
-    mock.listPorts().then(setPorts);
-    mock.listTasks().then(setTasks);
+    serverProvider.getInfo().then(setInfo).catch(() => {});
+    serverProvider.listProcesses().then(setProcesses).catch(() => {});
+    serverProvider.listPorts().then(setPorts).catch(() => {});
+    serverProvider.listTasks().then(setTasks).catch(() => {});
 
-    const stopMetrics = mock.streamMetrics(addMetrics);
+    const stopMetrics = serverProvider.streamMetrics(addMetrics);
     return () => stopMetrics();
   }, [provider, setProvider, setInfo, addMetrics, setProcesses, setPorts, setTasks]);
 

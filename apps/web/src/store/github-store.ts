@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { GithubAccount, GithubOrganization } from '@/lib/github/types';
-import { mockGitProvider } from '@/lib/github/mock-provider';
 
 interface GithubState {
   account: GithubAccount | null;
@@ -24,7 +23,9 @@ export const useGithubStore = create<GithubState>((set, get) => ({
   fetchAccount: async () => {
     set({ isLoading: true, error: null });
     try {
-      const account = await mockGitProvider.getAccount();
+      const res = await fetch('/api/github/account');
+      if (!res.ok) throw new Error('Failed to fetch account');
+      const account = await res.json();
       set({ account, isLoading: false });
     } catch (err: any) {
       set({ error: err.message, isLoading: false });
@@ -34,7 +35,9 @@ export const useGithubStore = create<GithubState>((set, get) => ({
   fetchOrganizations: async () => {
     set({ isLoading: true, error: null });
     try {
-      const orgs = await mockGitProvider.getOrganizations();
+      const res = await fetch('/api/github/organizations');
+      if (!res.ok) throw new Error('Failed to fetch organizations');
+      const orgs = await res.json();
       set({ organizations: orgs, isLoading: false });
     } catch (err: any) {
       set({ error: err.message, isLoading: false });

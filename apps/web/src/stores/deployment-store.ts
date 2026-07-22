@@ -31,5 +31,18 @@ export const useDeploymentStore = create<DeploymentState>((set) => ({
   setCurrentDeployment: (currentDeployment) => set({ currentDeployment }),
   setLoading: (isLoading) => set({ isLoading }),
   setError: (error) => set({ error }),
-  fetchDeployments: (projectId) => {},
+  fetchDeployments: async (projectId) => {
+    set({ isLoading: true, error: null });
+    try {
+      const res = await fetch(`/api/projects/${projectId}/deployments`);
+      const data = await res.json();
+      if (data.success && data.deployments) {
+        set({ deployments: data.deployments, isLoading: false });
+      } else {
+        set({ error: data.error || 'Failed to fetch', isLoading: false });
+      }
+    } catch (e: any) {
+      set({ error: e.message, isLoading: false });
+    }
+  },
 }));

@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { Notification, NotificationCategory } from '@/lib/notifications/types';
-import { generateMockNotifications } from '@/lib/notifications/mock-provider';
 
 interface NotificationState {
   notifications: Notification[];
@@ -22,9 +21,16 @@ export const useNotificationStore = create<NotificationState>((set) => ({
   activeCategory: 'All',
   searchQuery: '',
 
-  initialize: () => {
-    // Generate 5,000 mocked items to test virtualization
-    set({ notifications: generateMockNotifications(5000) });
+  initialize: async () => {
+    try {
+      const res = await fetch('/api/notifications');
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        set({ notifications: data });
+      }
+    } catch (e) {
+      console.error('Failed to fetch notifications', e);
+    }
   },
 
   setActiveCategory: (category) => set({ activeCategory: category }),

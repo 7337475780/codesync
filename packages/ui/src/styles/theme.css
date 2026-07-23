@@ -12,7 +12,7 @@
   --color-warning: #f59e0b;
   --color-danger: #ef4444;
   --color-info: #3b82f6;
-  
+
   --color-text-primary: #ffffff;
   --color-text-secondary: #a1a1aa;
   --color-text-muted: #71717a;
@@ -21,7 +21,7 @@
   /* Typography */
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-  
+
   /* Radius System */
   --radius-xs: 2px;
   --radius-sm: 4px;
@@ -61,17 +61,37 @@
   .glass-heavy {
     @apply bg-surface/80 backdrop-blur-xl border border-white/15 shadow-glass;
   }
-  
-  .display-xl { @apply text-5xl font-bold tracking-tight leading-tight; }
-  .display-lg { @apply text-4xl font-bold tracking-tight leading-tight; }
-  .heading { @apply text-2xl font-semibold tracking-tight; }
-  .subheading { @apply text-xl font-medium tracking-tight; }
-  .body-large { @apply text-lg leading-relaxed; }
-  .body { @apply text-base leading-relaxed; }
-  .body-small { @apply text-sm leading-relaxed; }
-  .caption { @apply text-xs text-text-muted; }
-  .code { @apply font-mono text-sm; }
-  .label { @apply text-xs font-medium uppercase tracking-wider text-text-secondary; }
+
+  .display-xl {
+    @apply text-5xl font-bold tracking-tight leading-tight;
+  }
+  .display-lg {
+    @apply text-4xl font-bold tracking-tight leading-tight;
+  }
+  .heading {
+    @apply text-2xl font-semibold tracking-tight;
+  }
+  .subheading {
+    @apply text-xl font-medium tracking-tight;
+  }
+  .body-large {
+    @apply text-lg leading-relaxed;
+  }
+  .body {
+    @apply text-base leading-relaxed;
+  }
+  .body-small {
+    @apply text-sm leading-relaxed;
+  }
+  .caption {
+    @apply text-xs text-text-muted;
+  }
+  .code {
+    @apply font-mono text-sm;
+  }
+  .label {
+    @apply text-xs font-medium uppercase tracking-wider text-text-secondary;
+  }
 }
 
 body {
